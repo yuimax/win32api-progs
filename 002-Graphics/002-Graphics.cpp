@@ -99,7 +99,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// 背景の塗りつぶし
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
-		// 線を描画、NULL_BRUSHを使用して図形塗りつぶしなし
+		// 図形の枠線のみ描画、NULL_BRUSHを使用して図形塗りつぶしなし
 		{
 			HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);	// 塗りつぶしなしのブラシ
 			HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, (HGDIOBJ)nullBrush);
@@ -122,6 +122,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			// ブラシを元に戻す
 			SelectObject(hdc, oldBrush);
+
+			// GetStockObjectで取得したブラシは削除しない
+			// DeleteObject(nullBrush); // これは不要
 		}
 
 		// 面の塗りつぶし、NULL_PENを使用して枠線なし
@@ -150,6 +153,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			// ペンを元に戻す
 			SelectObject(hdc, oldPen);
+
+			// GetStockObjectで取得したペンは削除しない
+			// DeleteObject(nullPen); // これは不要
 		}
 
 		// テキストの描画

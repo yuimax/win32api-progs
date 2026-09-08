@@ -87,6 +87,65 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	return TRUE;
 }
 
+
+static void drawPolygon(HDC hdc, COLORREF color)
+{
+	POINT points[] = {
+		POINT{500, 200},
+		POINT{480, 210},
+		POINT{460, 230},
+		POINT{450, 260},
+		POINT{455, 290},
+		POINT{470, 310},
+		POINT{490, 320},
+		POINT{510, 320},
+		POINT{530, 310},
+		POINT{545, 290},
+		POINT{550, 260},
+		POINT{540, 230},
+		POINT{520, 210},
+		POINT{500, 200},
+		POINT{500, 320},
+		POINT{480, 330},
+		POINT{460, 350},
+		POINT{450, 380},
+		POINT{455, 410},
+		POINT{470, 430},
+		POINT{490, 440},
+		POINT{510, 440},
+		POINT{530, 430},
+		POINT{545, 410},
+		POINT{550, 380},
+		POINT{540, 350},
+		POINT{520, 330},
+		POINT{500, 320},
+		POINT{470, 430},
+		POINT{430, 450},
+		POINT{400, 480},
+		POINT{390, 520},
+		POINT{400, 560},
+		POINT{420, 590},
+		POINT{450, 610},
+		POINT{480, 620},
+		POINT{520, 620},
+		POINT{550, 610},
+		POINT{580, 590},
+		POINT{600, 560},
+		POINT{610, 520},
+		POINT{600, 480},
+		POINT{570, 450},
+		POINT{530, 430},
+		POINT{470, 620},
+		POINT{460, 680},
+		POINT{455, 750},
+		POINT{460, 800},
+		POINT{480, 820},
+		POINT{520, 820},
+	};
+
+	Polyline(hdc, points, sizeof(points) / sizeof(points[0]));
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
@@ -104,13 +163,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);	// 塗りつぶしなしのブラシ
 			HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, (HGDIOBJ)nullBrush);
 
+			HPEN redPen = CreatePen(PS_SOLID, 3, RGB(224, 64, 128)); // 赤色のペン
 			HPEN greenPen = CreatePen(PS_SOLID, 3, RGB(128, 224, 64)); // 緑色のペン
 			HPEN bluePen = CreatePen(PS_SOLID, 3, RGB(64, 128, 224)); // 青色のペン
 
-			HPEN oldPen = (HPEN)SelectObject(hdc, (HGDIOBJ)greenPen);
+			HPEN oldPen = (HPEN)SelectObject(hdc, (HGDIOBJ)redPen);
 			Rectangle(hdc, 50, 50, 200, 150);	// hdc, X, Y, Width, Height
 
-			SelectObject(hdc, (HGDIOBJ)bluePen);
+			SelectObject(hdc, (HGDIOBJ)greenPen);
 			Ellipse(hdc, 100, 100, 250, 200);	// hdc, X, Y, Width, Height
 
 			// ペンを元に戻す
@@ -158,6 +218,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// DeleteObject(nullPen); // これは不要
 		}
 
+
+
+
 		// テキストの描画
 		{
 			// テキストを透過モードで描画する
@@ -191,7 +254,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// DrawTextの第3引数に-1を指定すると、文字列の終端まで描画される
 			DrawText(
 				hdc,
-				L"Hell, world\nこんにちは世界\n",
+				L"Hello, world\nこんにちは世界\n",
 				-1,
 				&textRect,
 				DT_LEFT | DT_TOP | DT_NOCLIP
@@ -201,6 +264,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SelectObject(hdc, oldfont);
 			DeleteObject(hFont);
 		}
+
+		drawPolygon(hdc, RGB(255, 0, 0)); // 赤色で多角形を描画
 
 		EndPaint(hWnd, &ps);
 		break;
@@ -225,4 +290,3 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
-

@@ -1,4 +1,5 @@
 #include "utils.h"
+using json = nlohmann::json;
 
 // INIファイルのパス
 static WCHAR IniFilePath[MAX_PATH];
@@ -17,7 +18,7 @@ struct Initializer {
 		WCHAR fname[_MAX_FNAME];
 		WCHAR ext[_MAX_EXT];
 		_wsplitpath_s(exePath, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME, ext, _MAX_EXT);
-		swprintf_s(IniFilePath, L"%s%s%s.ini", drive, dir, fname);
+		swprintf_s(IniFilePath, L"%s%s%s.json", drive, dir, fname);
 	}
 };
 
@@ -43,19 +44,39 @@ void SaveSettings(HWND hWnd)
 	WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
 	if (!GetWindowPlacement(hWnd, &wp)) return;
 
-	SaveInt(MainSection, L"X", wp.rcNormalPosition.left);
-	SaveInt(MainSection, L"Y", wp.rcNormalPosition.top);
-	SaveInt(MainSection, L"Width", wp.rcNormalPosition.right - wp.rcNormalPosition.left);
-	SaveInt(MainSection, L"Height", wp.rcNormalPosition.bottom - wp.rcNormalPosition.top);
+	json j;
+	j["X"] = wp.rcNormalPosition.left;
+	j["Y"] = wp.rcNormalPosition.top;
+	j["Width"] = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+	j["Height"] = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+
+	std::ofstream file(IniFilePath);
+	if (file.is_open()) {
+		file << j.dump(4); // 4タブインデントで整形して保存
+	}
+
 }
 
 // 設定の復元
 void LoadSettings(HWND hWnd)
 {
-	int x = LoadInt(MainSection, L"X", 0);
-	int y = LoadInt(MainSection, L"Y", 0);
-	int cx = LoadInt(MainSection, L"Width", 640);
-	int cy = LoadInt(MainSection, L"Height", 480);
+	std::ifstream file(IniFilePath);
+	if (!file.is_open()) {
+		return;
+	}
+
+	json j;
+	try {
+		file >> j;
+	}
+	catch (...) {
+		return;
+	}
+
+	int x = j.value("X", 0);
+	int y = j.value("Y", 0);
+	int cx = j.value("Width", 640);
+	int cy = j.value("Height", 480);
 
 	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
 }

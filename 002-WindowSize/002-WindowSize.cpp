@@ -1,4 +1,4 @@
-﻿// 001-MainWindow.cpp
+﻿// 002-WindowSize.cpp
 
 #include "framework.h"
 
@@ -6,10 +6,16 @@
 constexpr int INIT_WINDOW_WIDTH = 640;
 constexpr int INIT_WINDOW_HEIGHT = 480;
 
+// ★ウィンドウの最小サイズ・最大サイズ
+constexpr int MIN_WINDOW_WIDTH = 400;
+constexpr int MIN_WINDOW_HEIGHT = 300;
+constexpr int MAX_WINDOW_WIDTH = 1024;
+constexpr int MAX_WINDOW_HEIGHT = 768;
+
 // グローバル変数
 HINSTANCE hInst;
-WCHAR szTitle[] = L"win32api 001-MainWindow";
-WCHAR szWindowClass[] = L"WinClass 001-MainWindow";
+WCHAR szTitle[] = L"win32api 002-WindowSize";
+WCHAR szWindowClass[] = L"WinClass 002-WindowSize";
 
 // プロトタイプ宣言
 ATOM MyRegisterClass(HINSTANCE hInstance);
@@ -89,6 +95,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
+	LoadSettings(hWnd);	// ★ウィンドウの位置とサイズを復元
+
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
@@ -100,6 +108,21 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
+
+	case WM_GETMINMAXINFO:
+	{
+		MINMAXINFO* pMinMaxInfo = (MINMAXINFO*)lParam;
+
+		// 最小サイズの制限
+		pMinMaxInfo->ptMinTrackSize.x = MIN_WINDOW_WIDTH;
+		pMinMaxInfo->ptMinTrackSize.y = MIN_WINDOW_HEIGHT;
+
+		// 最大サイズの制限
+		pMinMaxInfo->ptMaxTrackSize.x = MAX_WINDOW_WIDTH;
+		pMinMaxInfo->ptMaxTrackSize.y = MAX_WINDOW_HEIGHT;
+
+		break;
+	}
 
 	case WM_PAINT:
 	{
@@ -123,6 +146,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 
 	case WM_DESTROY:
+		SaveSettings(hWnd);	// ★設定を保存する
+
 		PostQuitMessage(0);
 		break;
 	}

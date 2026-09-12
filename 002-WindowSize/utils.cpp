@@ -1,13 +1,10 @@
 #include "utils.h"
 using json = nlohmann::json;
 
-// INIファイルのパス
-static WCHAR IniFilePath[MAX_PATH];
+// 設定ファイルのパス
+static WCHAR ConfigFilePath[MAX_PATH];
 
-// INIファイルのメインセクション名
-static WCHAR MainSection[] = L"MainWindow";
-
-// WinMain() が実行される前に IniFilePath[] を初期化する
+// WinMain() が実行される前に ConfigFilePath[] を初期化する
 struct Initializer {
 	Initializer() {
 		WCHAR exePath[MAX_PATH];
@@ -18,7 +15,7 @@ struct Initializer {
 		WCHAR fname[_MAX_FNAME];
 		WCHAR ext[_MAX_EXT];
 		_wsplitpath_s(exePath, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME, ext, _MAX_EXT);
-		swprintf_s(IniFilePath, L"%s%s%s.json", drive, dir, fname);
+		swprintf_s(ConfigFilePath, L"%s%s%s.json", drive, dir, fname);
 	}
 };
 
@@ -29,20 +26,20 @@ static void SaveInt(LPCWSTR section, LPCWSTR key, int value)
 {
 	WCHAR buffer[50];	// 整数の文字列化に十分な長さを確保
 	swprintf_s(buffer, L"%d", value);
-	WritePrivateProfileString(section, key, buffer, IniFilePath);
+	WritePrivateProfileString(section, key, buffer, ConfigFilePath);
 }
 
 // 整数を復元する
 static int LoadInt(LPCWSTR section, LPCWSTR key, int defaultValue)
 {
-	return GetPrivateProfileInt(section, key, defaultValue, IniFilePath);
+	return GetPrivateProfileInt(section, key, defaultValue, ConfigFilePath);
 }
 
 // 設定の保存
 void SaveSettings(HWND hWnd)
 {
 	WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
-	if (!GetWindowPlacement(hWnd, &wp)) return;
+	GetWindowPlacement(hWnd, &wp);
 
 	json j;
 	j["X"] = wp.rcNormalPosition.left;
@@ -50,33 +47,38 @@ void SaveSettings(HWND hWnd)
 	j["Width"] = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
 	j["Height"] = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
 
-	std::ofstream file(IniFilePath);
-	if (file.is_open()) {
-		file << j.dump(4); // 4タブインデントで整形して保存
+	std::ofstream file(ConfigFilePath);
+	if (!file.is_open()) {
+		MessageBox(hWnd, L"JSONファイルに書き込めません", L"エラー", MB_OK);
+		return;
 	}
 
+	file << j.dump(4); // 4タブインデントで整形して保存
 }
 
 // 設定の復元
 void LoadSettings(HWND hWnd)
 {
-	std::ifstream file(IniFilePath);
-	if (!file.is_open()) {
-		return;
-	}
+	int x = 0;
+	int y = 0;
+	int cx = 640;
+	int cy = 480;
 
-	json j;
-	try {
-		file >> j;
+	std::ifstream file(ConfigFilePath);
+	if (file.is_open()) {
+		json j;
+		try {
+			file >> j;
+		}
+		catch (...) {
+			MessageBox(hWnd, L"JSONファイルが不正です", L"エラー", MB_OK);
+			return;
+		}
+		x = j.value("X", x);
+		y = j.value("Y", y);
+		cx = j.value("Width", cx);
+		cy = j.value("Height", cy);
 	}
-	catch (...) {
-		return;
-	}
-
-	int x = j.value("X", 0);
-	int y = j.value("Y", 0);
-	int cx = j.value("Width", 640);
-	int cy = j.value("Height", 480);
 
 	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
 }

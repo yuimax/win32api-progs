@@ -1,7 +1,8 @@
 #include "utils.h"
 
 // EXEファイルと同じディレクトリで、ファイル名の拡張子を ".ini" に変えたパスを得る
-static std::wstring GetIniFilePath() {
+static std::wstring GetIniFilePath()
+{
 	WCHAR exePath[MAX_PATH];
 	GetModuleFileName(NULL, exePath, MAX_PATH);
 
@@ -25,7 +26,8 @@ static std::wstring GetIniFilePath() {
 static std::wstring MyIniFilePath = GetIniFilePath();
 
 // 整数を保存する
-static void SaveInt(LPCWSTR section, LPCWSTR key, int value) {
+static void SaveInt(LPCWSTR section, LPCWSTR key, int value)
+{
 	WritePrivateProfileStringW(
 		section,
 		key,
@@ -35,7 +37,8 @@ static void SaveInt(LPCWSTR section, LPCWSTR key, int value) {
 }
 
 // 整数を復元する
-static int LoadInt(LPCWSTR section, LPCWSTR key, int defaultValue) {
+static int LoadInt(LPCWSTR section, LPCWSTR key, int defaultValue)
+{
 	return GetPrivateProfileIntW(
 		section,
 		key,
@@ -48,7 +51,8 @@ static int LoadInt(LPCWSTR section, LPCWSTR key, int defaultValue) {
 static const LPCWSTR MainSection = L"MainWindow";
 
 // 設定の保存
-void SaveSettings(HWND hWnd) {
+void SaveSettings(HWND hWnd)
+{
 	WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
 	if (!GetWindowPlacement(hWnd, &wp)) return;
 
@@ -59,7 +63,8 @@ void SaveSettings(HWND hWnd) {
 }
 
 // 設定の復元
-void LoadSettings(HWND hWnd) {
+void LoadSettings(HWND hWnd)
+{
 	int x = LoadInt(MainSection, L"X", 0);
 	int y = LoadInt(MainSection, L"Y", 0);
 	int cx = LoadInt(MainSection, L"Width", 640);
@@ -69,7 +74,8 @@ void LoadSettings(HWND hWnd) {
 }
 
 // 改行("\n")を含むテキストを表示する
-void MyDrawText(HDC hdc, int x, int y, LPCWSTR text) {
+void MyDrawText(HDC hdc, int x, int y, LPCWSTR text)
+{
 	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom
 	DrawText(hdc, text, -1, &rc, DT_NOCLIP);
 

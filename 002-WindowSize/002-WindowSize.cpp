@@ -79,7 +79,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		0,                   // dwExStyle
 		szWindowClass,       // lpClassName
 		szTitle,             // lpWindowName
-		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX, // ★ WS_MAXMIZEBOX をクリア
+		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX, // ★ WS_MAXMIZEBOX を無効化
 		CW_USEDEFAULT,       // X
 		CW_USEDEFAULT,       // Y
 		INIT_WINDOW_WIDTH,   // nWidth

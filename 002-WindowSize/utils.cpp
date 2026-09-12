@@ -82,6 +82,6 @@ void MyDrawText(HDC hdc, int x, int y, LPCWSTR text)
 	// メモ：
 	//	第2引数のtextは改行コードが有効（TextOut() だと改行できない）
 	//	第3引数は文字数で、ここに-1を指定すると自動計算する
-	//	第4引数は表示範囲で、DT_NOCLIP を指定する場合は rc.right と rc.bottom を無視
+	//	第4引数は表示範囲で、書式に DT_NOCLIP を指定する場合は rc.right と rc.bottom を無視
 	//	第5引数は書式で、右詰めやセンタリングなどいろいろ指定できる
 }

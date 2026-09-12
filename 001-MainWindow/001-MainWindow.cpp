@@ -95,7 +95,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	return TRUE;
 }
 
-////////////////////////////////////////// メインウィンドウの挙動
+////////////////////////////////////////// メインウィンドウのメッセージ処理
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {

@@ -2,7 +2,7 @@
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36429.23 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "002-WindowSize", "002-WindowSize.vcxproj", "{9478A7F9-7985-4703-9ADF-FF46EF5EB4F1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "002-WindowSize", "002-WindowSize.vcxproj", "{C8F3C5A2-FB78-4BB0-A9F1-30DD8CB1EBF8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,15 +10,15 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9478A7F9-7985-4703-9ADF-FF46EF5EB4F1}.Debug|x64.ActiveCfg = Debug|x64
-		{9478A7F9-7985-4703-9ADF-FF46EF5EB4F1}.Debug|x64.Build.0 = Debug|x64
-		{9478A7F9-7985-4703-9ADF-FF46EF5EB4F1}.Release|x64.ActiveCfg = Release|x64
-		{9478A7F9-7985-4703-9ADF-FF46EF5EB4F1}.Release|x64.Build.0 = Release|x64
+		{C8F3C5A2-FB78-4BB0-A9F1-30DD8CB1EBF8}.Debug|x64.ActiveCfg = Debug|x64
+		{C8F3C5A2-FB78-4BB0-A9F1-30DD8CB1EBF8}.Debug|x64.Build.0 = Debug|x64
+		{C8F3C5A2-FB78-4BB0-A9F1-30DD8CB1EBF8}.Release|x64.ActiveCfg = Release|x64
+		{C8F3C5A2-FB78-4BB0-A9F1-30DD8CB1EBF8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {3E89A52C-4E4F-49B1-873B-2C7F9F1DF2BD}
+		SolutionGuid = {E8243BA0-E588-435E-9CBE-5407C1E63603}
 	EndGlobalSection
 EndGlobal

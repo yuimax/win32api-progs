@@ -67,3 +67,9 @@ void LoadSettings(HWND hWnd) {
 
 	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
 }
+
+// 改行("\n")を含むテキストを表示する
+void MyDrawText(HDC hdc, int x, int y, LPCWSTR text) {
+	RECT rc = { x, y, 0, 0 };
+	DrawText(hdc, text, -1, &rc, DT_NOCLIP);
+}

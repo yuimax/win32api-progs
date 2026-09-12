@@ -14,5 +14,6 @@
 #include <memory.h>
 #include <tchar.h>
 
-// プロジェクト専用のヘッダーファイル
+// ★ここから下を追加
+#include <stdio.h>
 #include "utils.h"

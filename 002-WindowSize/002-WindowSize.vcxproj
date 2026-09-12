@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9478a7f9-7985-4703-9adf-ff46ef5eb4f1}</ProjectGuid>
+    <ProjectGuid>{c8f3c5a2-fb78-4bb0-a9f1-30dd8cb1ebf8}</ProjectGuid>
     <RootNamespace>002-WindowSize</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>002-WindowSize</ProjectName>

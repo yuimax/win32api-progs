@@ -9,8 +9,8 @@ constexpr int INIT_WINDOW_HEIGHT = 480;
 // ★ウィンドウの最小サイズ・最大サイズ
 constexpr int MIN_WINDOW_WIDTH = 400;
 constexpr int MIN_WINDOW_HEIGHT = 300;
-constexpr int MAX_WINDOW_WIDTH = 1024;
-constexpr int MAX_WINDOW_HEIGHT = 768;
+constexpr int MAX_WINDOW_WIDTH = 1000;
+constexpr int MAX_WINDOW_HEIGHT = 750;
 
 // グローバル変数
 HINSTANCE hInst;
@@ -79,7 +79,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		0,                   // dwExStyle
 		szWindowClass,       // lpClassName
 		szTitle,             // lpWindowName
-		WS_OVERLAPPEDWINDOW, // dwStyle
+		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX, // ★ WS_MAXMIZEBOX をクリア
 		CW_USEDEFAULT,       // X
 		CW_USEDEFAULT,       // Y
 		INIT_WINDOW_WIDTH,   // nWidth
@@ -95,7 +95,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
-	LoadSettings(hWnd);	// ★ウィンドウの位置とサイズを復元
+	LoadSettings(hWnd);	// ★設定の復元を追加
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
@@ -103,13 +103,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	return TRUE;
 }
 
-////////////////////////////////////////// メインウィンドウの挙動
+////////////////////////////////////////// メインウィンドウのメッセージ処理
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
 
-	case WM_GETMINMAXINFO:
+	case WM_GETMINMAXINFO:	// ★ WM_GETMINMAXINFO の処理を追加
 	{
 		MINMAXINFO* pMinMaxInfo = (MINMAXINFO*)lParam;
 
@@ -129,6 +129,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+
+		// ★確認のためウィンドウサイズを表示
+		RECT rc;
+		GetWindowRect(hWnd, &rc);
+		WCHAR text[100];
+		swprintf_s(text, L"Window Size = (%d, %d)", rc.right - rc.left, rc.bottom - rc.top);
+		MyDrawText(hdc, 8, 8, text);
+
 		EndPaint(hWnd, &ps);
 		break;
 	}
@@ -146,7 +154,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 
 	case WM_DESTROY:
-		SaveSettings(hWnd);	// ★設定を保存する
+		SaveSettings(hWnd);	// ★設定の保存を追加
 
 		PostQuitMessage(0);
 		break;

@@ -17,3 +17,12 @@
 		* SaveSettings(): 設定をINIファイルに保存
 		* LoadSettings(): 設定をINIファイルから復元
 		* MyDrawText(): 改行(\n)を含むテキストを画面に表示
+* **003-JsonConfig**
+	* 002-WindowSizeの設定ファイルをJSON形式に変えたもの
+	* JSONライブラリは [https://github.com/nlohmann/json](nlohmann/json) を利用
+	* ライブラリ使用時は #include "../lib/json.hpp" とする
+* **004-JsonConfig**
+	* 002-WindowSizeの設定ファイルをXML形式に変えたもの
+	* 設定データは自作のMyTreeライブラリで管理する
+	* ライブラリ使用時は #include "../lib/mytree.hpp" とする
+

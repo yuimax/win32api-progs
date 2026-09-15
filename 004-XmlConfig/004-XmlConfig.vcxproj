@@ -13,10 +13,10 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{c8f3c5a2-fb78-4bb0-a9f1-30dd8cb1ebf8}</ProjectGuid>
-    <RootNamespace>002-WindowSize</RootNamespace>
+    <ProjectGuid>{d4d3aa5c-1216-43db-a5d7-56fccdc7d812}</ProjectGuid>
+    <RootNamespace>004-XmlConfig</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>002-WindowSize</ProjectName>
+    <ProjectName>004-XmlConfig</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -80,11 +80,11 @@
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="002-WindowSize.cpp" />
+    <ClCompile Include="004-XmlConfig.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="002-WindowSize.rc" />
+    <ResourceCompile Include="004-XmlConfig.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

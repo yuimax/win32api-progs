@@ -1,4 +1,7 @@
 #include "utils.h"
+#include <fstream>
+#include "../lib/json.hpp"
+
 using json = nlohmann::json;
 
 // 設定ファイルのパス
@@ -14,7 +17,7 @@ struct Initializer {
 		WCHAR dir[_MAX_DIR];
 		WCHAR fname[_MAX_FNAME];
 		WCHAR ext[_MAX_EXT];
-		_wsplitpath_s(exePath, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME, ext, _MAX_EXT);
+		_wsplitpath_s(exePath, drive, dir, fname, ext);
 		MySprintf(ConfigFilePath, L"%s%s%s.json", drive, dir, fname);
 	}
 };
@@ -27,11 +30,12 @@ void SaveSettings(HWND hWnd)
 	WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
 	GetWindowPlacement(hWnd, &wp);
 
+	RECT& rc = wp.rcNormalPosition;
 	json j;
-	j["X"] = wp.rcNormalPosition.left;
-	j["Y"] = wp.rcNormalPosition.top;
-	j["Width"] = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
-	j["Height"] = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+	j["X"] = rc.left;
+	j["Y"] = rc.top;
+	j["Width"] = Width(rc);
+	j["Height"] = Height(rc);
 
 	std::ofstream file(ConfigFilePath);
 	if (!file.is_open()) {
@@ -55,11 +59,8 @@ void LoadSettings(HWND hWnd)
 
 	std::ifstream file(ConfigFilePath);
 	if (file.is_open()) {
-		json j;
-		try {
-			file >> j;
-		}
-		catch (...) {
+		json j = json::parse(file, nullptr, false);
+		if (j.is_discarded()) {
 			MessageBox(hWnd, L"JSONファイルが不正です", L"エラー", MB_OK);
 			return;
 		}

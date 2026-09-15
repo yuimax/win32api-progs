@@ -1,9 +1,8 @@
 #pragma once
 
 #include <windows.h>
-#include <cstdio>	// for _vsnwprintf_s(), _wsplitpath_s()
-#include <cstdarg>
-
+#include <stdio.h>	// for _vsnwprintf_s()
+#include <stdarg.h> // for va_list, va_start, va_end
 
 // sprintf()と同じだがバッファーオーバーフローを回避する
 // すべて出力できればTRUEを返し、出力を打ち切った場合はFALSEを返す
@@ -22,10 +21,10 @@ inline int Width(const RECT& rc) { return rc.right - rc.left; }
 // RECT の高さを返す
 inline int Height(const RECT& rc) { return rc.bottom - rc.top; }
 
-// INIファイルから設定を読み出す
+// XMLファイルから設定を読み出す
 extern void LoadSettings(HWND hWnd);
 
-// INIファイルに設定を保存する
+// XMLファイルに設定を保存する
 extern void SaveSettings(HWND hWnd);
 
 // ウィンドウにテキストを表示する

@@ -2,9 +2,7 @@
 
 #include <windows.h>
 #include <stdio.h>	// for _vsnwprintf_s()
-#include <cstdarg>
-#include <fstream>
-#include "../lib/json.hpp"
+#include <stdarg.h> // for va_list, va_start, va_end
 
 // sprintf()と同じだがバッファーオーバーフローを回避する
 // すべて出力できればTRUEを返し、出力を打ち切った場合はFALSEを返す

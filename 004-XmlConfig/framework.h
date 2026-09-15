@@ -15,4 +15,5 @@
 #include <tchar.h>
 
 // ★ここから下を追加
+#include <stdio.h>
 #include "utils.h"

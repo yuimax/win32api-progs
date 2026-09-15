@@ -1,10 +1,14 @@
 #include "utils.h"
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <iterator>
+#include "../lib/mytree.hpp"
+
+using StreamIt = std::istreambuf_iterator<char>;
 
 // 設定ファイルのパス
 static WCHAR ConfigFilePath[MAX_PATH];
-
-// 設定ファイルのメインセクション名
-static WCHAR MainSection[] = L"MainWindow";
 
 // WinMain() が実行される前に ConfigFilePath[] を初期化する
 struct Initializer {
@@ -16,57 +20,65 @@ struct Initializer {
 		WCHAR dir[_MAX_DIR];
 		WCHAR fname[_MAX_FNAME];
 		WCHAR ext[_MAX_EXT];
-		_wsplitpath_s(exePath, drive, dir, fname, ext);
-		MySprintf(ConfigFilePath, L"%s%s%s.ini", drive, dir, fname);
+		_wsplitpath_s(exePath, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME, ext, _MAX_EXT);
+		MySprintf(ConfigFilePath, L"%s%s%s.xml", drive, dir, fname);
 	}
 };
 
 static Initializer initializer;
 
-// 整数を保存する
-static void SaveInt(LPCWSTR section, LPCWSTR key, int value)
-{
-	WCHAR buffer[100] = { 0 };
-	MySprintf(buffer, L"%d", value);
-	WritePrivateProfileString(section, key, buffer, ConfigFilePath);
-}
-
-// 整数を復元する
-static int LoadInt(LPCWSTR section, LPCWSTR key, int defaultValue)
-{
-	return GetPrivateProfileInt(section, key, defaultValue, ConfigFilePath);
-}
-
-// INIファイルに設定を保存する
+// 設定の保存
 void SaveSettings(HWND hWnd)
 {
 	WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
 	GetWindowPlacement(hWnd, &wp);
-
 	RECT& rc = wp.rcNormalPosition;
 
-	SaveInt(MainSection, L"X", rc.left);
-	SaveInt(MainSection, L"Y", rc.top);
-	SaveInt(MainSection, L"Width", Width(rc));
-	SaveInt(MainSection, L"Height", Height(rc));
+	auto config = MyTree::Create("config");
+	config->addChild("X", rc.left);
+	config->addChild("Y", rc.top);
+	config->addChild("Width", Width(rc));
+	config->addChild("Height", Height(rc));
+
+	std::ofstream file(ConfigFilePath);
+	if (file.is_open()) {
+		file << config->ToString();
+	}
+	else {
+		MessageBox(hWnd, L"SaveSettings(): XMLファイルに書き込めません", L"エラー", MB_OK);
+	}
+
 }
 
-// INIファイルから設定を読み出す
+// 設定の復元
 void LoadSettings(HWND hWnd)
 {
 	RECT rc;
 	GetWindowRect(hWnd, &rc);
 
-	int x = LoadInt(MainSection, L"X", rc.left);
-	int y = LoadInt(MainSection, L"Y", rc.top);
-	int cx = LoadInt(MainSection, L"Width", Width(rc));
-	int cy = LoadInt(MainSection, L"Height", Height(rc));
+	int x = rc.left;
+	int y = rc.top;
+	int cx = Width(rc);
+	int cy = Height(rc);
+
+	std::ifstream file(ConfigFilePath);
+	if (file.is_open()) {
+		auto xmlstr = std::string{ StreamIt(file), StreamIt() };
+		auto config = MyTree::FromString(xmlstr);
+		if (!config) {
+			MessageBox(hWnd, L"LoadSettings(): XMLデータが不正です", L"エラー", MB_OK);
+			return;
+		}
+		x = config->getInt("X", x);
+		y = config->getInt("Y", y);
+		cx = config->getInt("Width", cx);
+		cy = config->getInt("Height", cy);
+	}
 
 	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
-// ウィンドウにテキストを表示する
-// テキストに改行(\n)を含めることができる
+// 改行("\n")を含むテキストを表示する
 void MyTextOut(HDC hdc, int x, int y, LPCWSTR text)
 {
 	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom

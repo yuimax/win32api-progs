@@ -20,9 +20,9 @@
 * **003-JsonConfig**
 	* 002-WindowSizeの設定ファイルをJSON形式に変えたもの
 	* JSONライブラリは [nlohmann/json](https://github.com/nlohmann/json) を利用
-	* ライブラリ使用時は #include "../lib/json.hpp" とする
+	* ライブラリ使用時は `#include "../lib/json.hpp"` を指定する
 * **004-JsonConfig**
 	* 002-WindowSizeの設定ファイルをXML形式に変えたもの
 	* 設定データは自作のMyTreeライブラリで管理する
-	* ライブラリ使用時は #include "../lib/mytree.hpp" とする
+	* ライブラリ使用時は `#include "../lib/mytree.hpp"` を指定する
 

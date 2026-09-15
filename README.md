@@ -19,7 +19,7 @@
 		* MyDrawText(): 改行(\n)を含むテキストを画面に表示
 * **003-JsonConfig**
 	* 002-WindowSizeの設定ファイルをJSON形式に変えたもの
-	* JSONライブラリは [https://github.com/nlohmann/json](nlohmann/json) を利用
+	* JSONライブラリは [nlohmann/json](https://github.com/nlohmann/json) を利用
 	* ライブラリ使用時は #include "../lib/json.hpp" とする
 * **004-JsonConfig**
 	* 002-WindowSizeの設定ファイルをXML形式に変えたもの

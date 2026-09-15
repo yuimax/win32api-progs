@@ -21,7 +21,6 @@ WCHAR szWindowClass[] = L"WinClass 002-WindowSize";
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
 // x64用エントリポイント
 int APIENTRY wWinMain(

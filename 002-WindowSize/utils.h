@@ -29,8 +29,8 @@ inline int Width(const RECT& rc) { return rc.right - rc.left; }
 // RECT の高さを返す
 inline int Height(const RECT& rc) { return rc.bottom - rc.top; }
 
-// INIファイルから設定を読み出す
+// Configファイルから設定を読み出す
 extern void LoadSettings(HWND hWnd);
 
-// INIファイルに設定を保存する
+// Configファイルに設定を保存する
 extern void SaveSettings(HWND hWnd);

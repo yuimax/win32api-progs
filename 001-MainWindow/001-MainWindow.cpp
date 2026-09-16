@@ -115,7 +115,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// 背景を塗りつぶす
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
-		// テキストを表示
+		// "Hello world!" を表示
 		WCHAR text[100];
 		MySprintf(text, L"Hello world!");
 		MyTextOut(hdc, 10, 10, text);

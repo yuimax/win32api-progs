@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <cstdio>
 #include <cstdarg>
+#include <string>
 
 //////////////////////////////////////////////// 001-MainWindow で追加
 
@@ -34,3 +35,12 @@ extern void LoadSettings(HWND hWnd);
 
 // Configファイルに設定を保存する
 extern void SaveSettings(HWND hWnd);
+
+//////////////////////////////////////////////// 004-XmlConfig で追加
+
+extern BOOL Utf8StrCopy(WCHAR buf[], int len, std::string utf8str);
+
+template <size_t N>
+BOOL Utf8StrCopy(WCHAR(&buf)[N], std::string utf8str) {
+    return Utf8StrCopy(buf, N, utf8str);
+}

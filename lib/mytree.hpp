@@ -113,6 +113,7 @@ public:
 	}
 
 	// 指定した key を持つ最初の子ノードを取得
+	// 条件を満たす子ノードがなければ nullptr を返す
 	std::shared_ptr<MyTree> getChild(const std::string& key) const {
 		for (const auto& child : this->Children) {
 			if (child->Key == key) {
@@ -122,13 +123,15 @@ public:
 		return nullptr;
 	}
 
-	// 指定したkeyを持つ最初の子ノードの値をstd::stringとして取得
+	// 指定した key を持つ最初の子ノードの値を std::string として取得
+	// 条件を満たす子ノードがなければ空文字列 "" を返す
 	std::string getString(const std::string& key) const {
 		auto child = getChild(key);
 		return child ? child->Value : "";
 	}
 
-	// 指定したkeyを持つ最初の子ノードの値をintとして取得
+	// 指定した key を持つ最初の子ノードの値を int として取得
+	// 条件を満たす子ノードがなければ defaultValue を返す
 	int getInt(const std::string& key, int defaultValue) const {
 		auto child = getChild(key);
 		if (child) {
@@ -156,6 +159,7 @@ public:
 	}
 
 	// XML文字列からツリーを構築する
+	// 不正な XML なら nullptr を返す
 	static std::shared_ptr<MyTree> FromString(const std::string& data) {
 		std::istringstream iss(data);
 		std::string line;

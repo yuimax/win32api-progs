@@ -68,6 +68,23 @@ void SaveSettings(HWND hWnd)
 	file << config.dump(4); // 4タブインデントで整形して保存
 }
 
+// 最も近いモニターのワークエリアを取得し、
+// 四角形(x, y, x+cx, y+cy)がワークエリアに収まるように調整した位置(x, y)を返す
+static POINT GetSafeLocation(int x, int y, int cx, int cy)
+{
+	RECT rc{ x, y, x + cx, y + cy };
+	HMONITOR hMonitor = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
+	if (hMonitor) {
+		MONITORINFO mi = { sizeof(MONITORINFO) };
+		if (GetMonitorInfo(hMonitor, &mi)) {
+			RECT area = mi.rcWork;
+			x = min(max(x, area.left), area.right - cx);
+			y = min(max(y, area.top), area.bottom - cy);
+		}
+	}
+	return POINT{ x, y };
+}
+
 // 設定の復元
 void LoadSettings(HWND hWnd)
 {
@@ -88,10 +105,15 @@ void LoadSettings(HWND hWnd)
 		}
 		json section = config["MainWindow"];
 		if (section != nullptr) {
+			// 保存データがあれば取り出す
 			x = section.value("X", x);
 			y = section.value("Y", y);
 			cx = section.value("Width", cx);
 			cy = section.value("Height", cy);
+			// ウィンドウが画面内に収まるように位置を調整
+			POINT pt = GetSafeLocation(x, y, cx, cy);
+			x = pt.x;
+			y = pt.y;
 		}
 	}
 

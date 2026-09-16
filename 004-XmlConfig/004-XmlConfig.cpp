@@ -101,6 +101,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 ////////////////////////////////////////// メインウィンドウのメッセージ処理
 
+#include <string>
+#include "../lib/mytree.hpp"
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
@@ -139,6 +142,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		WCHAR text[100];
 		MySprintf(text, L"Window Size = (%d, %d)", Width(rc), Height(rc));
 		MyTextOut(hdc, 8, 8, text);
+
+		char xml[] = R"(
+			<node key="foo" value="bar">
+				<node key="a" value="11" />
+				<node key="b" value="222" />
+			</node>
+		)";
+		auto tree = MyTree::FromString(xml);
+		WCHAR buf[1000];
+		Utf8StrCopy(buf, tree->ToString());
+		MyTextOut(hdc, 8, 40, buf);
+
 
 		// 後始末
 		EndPaint(hWnd, &ps);

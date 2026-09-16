@@ -67,6 +67,23 @@ void SaveSettings(HWND hWnd)
 	SaveInt(L"MainWindow", L"Height", Height(rc));
 }
 
+// 最も近いモニターのワークエリアを取得し、
+// 四角形(x, y, x+cx, y+cy)がワークエリアに収まるように調整した位置(x, y)を返す
+static POINT GetSafeLocation(int x, int y, int cx, int cy)
+{
+	RECT rc{ x, y, x + cx, y + cy };
+	HMONITOR hMonitor = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
+	if (hMonitor) {
+		MONITORINFO mi = { sizeof(MONITORINFO) };
+		if (GetMonitorInfo(hMonitor, &mi)) {
+			RECT area = mi.rcWork;
+			x = min(max(x, area.left), area.right - cx);
+			y = min(max(y, area.top), area.bottom - cy);
+		}
+	}
+	return POINT{ x, y };
+}
+
 // INIファイルから設定を読み出す
 void LoadSettings(HWND hWnd)
 {
@@ -78,20 +95,7 @@ void LoadSettings(HWND hWnd)
 	int cx = LoadInt(L"MainWindow", L"Width", Width(rc));
 	int cy = LoadInt(L"MainWindow", L"Height", Height(rc));
 
-	// 最も近いモニターの作業領域（タスクバー等を除いた領域）を取得し、
-	// ウィンドウが作業領域に入るように位置を調整する
-	rc = { x, y, cx, cy };
-	HMONITOR hMonitor = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
-	if (hMonitor) {
-		MONITORINFO mi = { sizeof(MONITORINFO) };
-		if (GetMonitorInfo(hMonitor, &mi)) {
-			RECT area = mi.rcWork;
-			x = max(x, area.left);
-			x = min(x, area.right - cx);
-			y = max(y, area.top);
-			y = min(y, area.bottom - cy);
-		}
-	}
+	POINT pt = GetSafeLocation(x, y, cx, cy);
 
-	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
+	SetWindowPos(hWnd, NULL, pt.x, pt.y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
 }

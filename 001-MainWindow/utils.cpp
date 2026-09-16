@@ -1,4 +1,4 @@
-#include <windows.h>
+#include "utils.h"
 
 // ウィンドウにテキストを表示する
 // テキストに改行(\n)を含めることができる

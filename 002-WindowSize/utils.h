@@ -1,9 +1,10 @@
 #pragma once
 
 #include <windows.h>
-#include <cstdio>	// for _vsnwprintf_s(), _wsplitpath_s()
+#include <cstdio>
 #include <cstdarg>
 
+//////////////////////////////////////////////// 001-MainWindow で追加
 
 // sprintf()と同じだがバッファーオーバーフローを回避する
 // すべて出力できればTRUEを返し、出力を打ち切った場合はFALSEを返す
@@ -16,6 +17,12 @@ BOOL MySprintf(WCHAR(&buf)[N], LPCWSTR format, ...) {
     return (count >= 0) ? TRUE : FALSE;
 }
 
+// ウィンドウにテキストを表示する
+// テキストに改行(\n)を含めることができる
+extern void MyTextOut(HDC hdc, int x, int y, LPCWSTR text);
+
+//////////////////////////////////////////////// 002-WindowSize で追加
+
 // RECT の幅を返す
 inline int Width(const RECT& rc) { return rc.right - rc.left; }
 
@@ -27,7 +34,3 @@ extern void LoadSettings(HWND hWnd);
 
 // INIファイルに設定を保存する
 extern void SaveSettings(HWND hWnd);
-
-// ウィンドウにテキストを表示する
-// テキストに改行(\n)を含めることができる
-extern void MyTextOut(HDC hdc, int x, int y, LPCWSTR text);

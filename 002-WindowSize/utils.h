@@ -34,3 +34,6 @@ extern void LoadSettings(HWND hWnd);
 
 // Configファイルに設定を保存する
 extern void SaveSettings(HWND hWnd);
+
+// ウィンドウが画面外にはみ出ている場合、画面内に収める
+extern void EnsureInWorkArea(HWND hWnd);

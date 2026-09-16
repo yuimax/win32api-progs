@@ -1,4 +1,25 @@
 #include "utils.h"
+
+//////////////////////////////////////////////// 001-MainWindow で追加
+
+// ウィンドウにテキストを表示する
+// テキストに改行(\n)を含めることができる
+void MyTextOut(HDC hdc, int x, int y, LPCWSTR text)
+{
+	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom
+	DrawText(hdc, text, -1, &rc, DT_NOCLIP | DT_NOPREFIX);
+
+	// メモ： DrawText()について
+	//	第2引数のtext内では改行コード(\n)が有効
+	//	またtext内の文字'&'は「次の文字を下線で修飾する」という意味になる
+	//	'&'を普通の文字として表示するには、書式に DT_NOPREFIX を含める
+	//	第3引数は文字数で、-1を指定すると自動計算する
+	//	第4引数は表示範囲で、書式に DT_NOCLIP がある場合は rc.right と rc.bottom を無視
+	//	第5引数は書式で、右詰めやセンタリングなどいろいろ
+}
+
+//////////////////////////////////////////////// 003-JsonConfig で追加
+
 #include <fstream>
 #include "../lib/json.hpp"
 
@@ -31,11 +52,12 @@ void SaveSettings(HWND hWnd)
 	GetWindowPlacement(hWnd, &wp);
 
 	RECT& rc = wp.rcNormalPosition;
-	json j;
-	j["X"] = rc.left;
-	j["Y"] = rc.top;
-	j["Width"] = Width(rc);
-	j["Height"] = Height(rc);
+	json config, section;
+	section["X"] = rc.left;
+	section["Y"] = rc.top;
+	section["Width"] = Width(rc);
+	section["Height"] = Height(rc);
+	config["MainWindow"] = section;
 
 	std::ofstream file(ConfigFilePath);
 	if (!file.is_open()) {
@@ -43,7 +65,7 @@ void SaveSettings(HWND hWnd)
 		return;
 	}
 
-	file << j.dump(4); // 4タブインデントで整形して保存
+	file << config.dump(4); // 4タブインデントで整形して保存
 }
 
 // 設定の復元
@@ -51,7 +73,7 @@ void LoadSettings(HWND hWnd)
 {
 	RECT rc;
 	GetWindowRect(hWnd, &rc);
-	
+
 	int x = rc.left;
 	int y = rc.top;
 	int cx = Width(rc);
@@ -59,31 +81,19 @@ void LoadSettings(HWND hWnd)
 
 	std::ifstream file(ConfigFilePath);
 	if (file.is_open()) {
-		json j = json::parse(file, nullptr, false);
-		if (j.is_discarded()) {
+		json config = json::parse(file, nullptr, false);
+		if (config.is_discarded()) {
 			MessageBox(hWnd, L"JSONファイルが不正です", L"エラー", MB_OK);
 			return;
 		}
-		x = j.value("X", x);
-		y = j.value("Y", y);
-		cx = j.value("Width", cx);
-		cy = j.value("Height", cy);
+		json section = config["MainWindow"];
+		if (section != nullptr) {
+			x = section.value("X", x);
+			y = section.value("Y", y);
+			cx = section.value("Width", cx);
+			cy = section.value("Height", cy);
+		}
 	}
 
 	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
-}
-
-// 改行("\n")を含むテキストを表示する
-void MyTextOut(HDC hdc, int x, int y, LPCWSTR text)
-{
-	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom
-	DrawText(hdc, text, -1, &rc, DT_NOCLIP | DT_NOPREFIX);
-
-	// メモ： DrawText()について
-	//	第2引数のtext内では改行コード(\n)が有効
-	//	またtext内の文字'&'は「次の文字を下線で修飾する」という意味になる
-	//	'&'を普通の文字として表示するには、書式に DT_NOPREFIX を含める
-	//	第3引数は文字数で、-1を指定すると自動計算する
-	//	第4引数は表示範囲で、書式に DT_NOCLIP がある場合は rc.right と rc.bottom を無視
-	//	第5引数は書式で、右詰めやセンタリングなどいろいろ
 }

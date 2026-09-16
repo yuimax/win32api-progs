@@ -61,7 +61,6 @@ void SaveSettings(HWND hWnd)
 	GetWindowPlacement(hWnd, &wp);
 
 	RECT& rc = wp.rcNormalPosition;
-
 	SaveInt(L"MainWindow", L"X", rc.left);
 	SaveInt(L"MainWindow", L"Y", rc.top);
 	SaveInt(L"MainWindow", L"Width", Width(rc));
@@ -78,6 +77,21 @@ void LoadSettings(HWND hWnd)
 	int y = LoadInt(L"MainWindow", L"Y", rc.top);
 	int cx = LoadInt(L"MainWindow", L"Width", Width(rc));
 	int cy = LoadInt(L"MainWindow", L"Height", Height(rc));
+
+	// 最も近いモニターの作業領域（タスクバー等を除いた領域）を取得し、
+	// ウィンドウが作業領域に入るように位置を調整する
+	rc = { x, y, cx, cy };
+	HMONITOR hMonitor = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
+	if (hMonitor) {
+		MONITORINFO mi = { sizeof(MONITORINFO) };
+		if (GetMonitorInfo(hMonitor, &mi)) {
+			RECT area = mi.rcWork;
+			x = max(x, area.left);
+			x = min(x, area.right - cx);
+			y = max(y, area.top);
+			y = min(y, area.bottom - cy);
+		}
+	}
 
 	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
 }

@@ -114,7 +114,7 @@ public:
 
 	// 指定した key を持つ最初の子ノードを取得
 	std::shared_ptr<MyTree> getChild(const std::string& key) const {
-		for (const auto& child : Children) {
+		for (const auto& child : this->Children) {
 			if (child->Key == key) {
 				return child;
 			}

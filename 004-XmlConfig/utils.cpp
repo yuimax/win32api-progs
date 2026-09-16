@@ -1,6 +1,26 @@
 #include "utils.h"
+
+//////////////////////////////////////////////// 001-MainWindow で追加
+
+// ウィンドウにテキストを表示する
+// テキストに改行(\n)を含めることができる
+void MyTextOut(HDC hdc, int x, int y, LPCWSTR text)
+{
+	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom
+	DrawText(hdc, text, -1, &rc, DT_NOCLIP | DT_NOPREFIX);
+
+	// メモ： DrawText()について
+	//	第2引数のtext内では改行コード(\n)が有効
+	//	またtext内の文字'&'は「次の文字を下線で修飾する」という意味になる
+	//	'&'を普通の文字として表示するには、書式に DT_NOPREFIX を含める
+	//	第3引数は文字数で、-1を指定すると自動計算する
+	//	第4引数は表示範囲で、書式に DT_NOCLIP がある場合は rc.right と rc.bottom を無視
+	//	第5引数は書式で、右詰めやセンタリングなどいろいろ
+}
+
+//////////////////////////////////////////////// 004-XmlConfig で追加
+
 #include <fstream>
-#include <sstream>
 #include <string>
 #include <iterator>
 #include "../lib/mytree.hpp"
@@ -35,10 +55,11 @@ void SaveSettings(HWND hWnd)
 	RECT& rc = wp.rcNormalPosition;
 
 	auto config = MyTree::Create("config");
-	config->addChild("X", rc.left);
-	config->addChild("Y", rc.top);
-	config->addChild("Width", Width(rc));
-	config->addChild("Height", Height(rc));
+	auto section = config->addChild("MainWindow");
+	section->addChild("X", rc.left);
+	section->addChild("Y", rc.top);
+	section->addChild("Width", Width(rc));
+	section->addChild("Height", Height(rc));
 
 	std::ofstream file(ConfigFilePath);
 	if (file.is_open()) {
@@ -65,30 +86,16 @@ void LoadSettings(HWND hWnd)
 	if (file.is_open()) {
 		auto xmlstr = std::string{ StreamIt(file), StreamIt() };
 		auto config = MyTree::FromString(xmlstr);
-		if (!config) {
-			MessageBox(hWnd, L"LoadSettings(): XMLデータが不正です", L"エラー", MB_OK);
-			return;
+		if (config) {
+			auto section = config->getChild("MainWindow");
+			if (section) {
+				x = section->getInt("X", x);
+				y = section->getInt("Y", y);
+				cx = section->getInt("Width", cx);
+				cy = section->getInt("Height", cy);
+			}
 		}
-		x = config->getInt("X", x);
-		y = config->getInt("Y", y);
-		cx = config->getInt("Width", cx);
-		cy = config->getInt("Height", cy);
 	}
 
 	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
-}
-
-// 改行("\n")を含むテキストを表示する
-void MyTextOut(HDC hdc, int x, int y, LPCWSTR text)
-{
-	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom
-	DrawText(hdc, text, -1, &rc, DT_NOCLIP | DT_NOPREFIX);
-
-	// メモ： DrawText()について
-	//	第2引数のtext内では改行コード(\n)が有効
-	//	またtext内の文字'&'は「次の文字を下線で修飾する」という意味になる
-	//	'&'を普通の文字として表示するには、書式に DT_NOPREFIX を含める
-	//	第3引数は文字数で、-1を指定すると自動計算する
-	//	第4引数は表示範囲で、書式に DT_NOCLIP がある場合は rc.right と rc.bottom を無視
-	//	第5引数は書式で、右詰めやセンタリングなどいろいろ
 }

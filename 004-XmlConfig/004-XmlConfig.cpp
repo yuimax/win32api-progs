@@ -14,36 +14,41 @@ constexpr int MAX_WINDOW_HEIGHT = 750;
 
 // グローバル変数
 HINSTANCE hInst;
-WCHAR szTitle[] = L"win32api 004-XmlConfig";
-WCHAR szWindowClass[] = L"WinClass 004-XmlConfig";
+WCHAR WindowTitle[] = L"win32api 004-XmlConfig";
+WCHAR WindowClassName[] = L"WinClass 004-XmlConfig";
 
 // プロトタイプ宣言
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-// x64用エントリポイント
+// エントリポイント
 int APIENTRY wWinMain(
 	_In_     HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
 	_In_     LPWSTR lpCmdLine,
 	_In_     int nCmdShow)
 {
-	hInst = hInstance;		// あとで使うのでグローバル変数に格納
-	(void)hPrevInstance;	// 引数未使用の警告を回避
-	(void)lpCmdLine;		// 引数未使用の警告を回避
+	// 引数未使用の警告を回避
+	(void)hPrevInstance;
+	(void)lpCmdLine;
 
+	// ウィンドウクラスを登録する
 	MyRegisterClass(hInstance);
 
+	// ウィンドウを作成する
 	if (!InitInstance(hInstance, nCmdShow))
 	{
 		return FALSE;
 	}
 
+	// hInstanceをグローバル変数に保存しておく
+	hInst = hInstance;
+
+	// メッセージループ
 	MSG msg;
 	while (GetMessage(&msg, nullptr, 0, 0))
 	{
-		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
 
@@ -53,40 +58,32 @@ int APIENTRY wWinMain(
 // メインウィンドウのウィンドウクラスを登録
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-	WNDCLASSEXW wcex;
+	WNDCLASSEX wcex = { sizeof(WNDCLASSEX) }; // 先頭要素のみ指定、残りを0で埋める
 
-	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = WndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
 	wcex.hInstance = hInstance;
-	wcex.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
-	wcex.hCursor = nullptr; // カーソルを自分で設定するので、nullptrにする
-	wcex.hbrBackground = nullptr; // 背景を自分で描画するので、nullptrにする
-	wcex.lpszMenuName = nullptr; // メニューは使用しないので、nullptrにする
-	wcex.lpszClassName = szWindowClass;
-	wcex.hIconSm = nullptr; // 小さいアイコンにも hIcon を兼用するので、nullptrにする
+	wcex.lpszClassName = WindowClassName;
 
-	return RegisterClassExW(&wcex);
+	return RegisterClassEx(&wcex);
 }
 
 // メインウィンドウの作成
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-	HWND hWnd = CreateWindowExW(
-		0,                   // dwExStyle
-		szWindowClass,       // lpClassName
-		szTitle,             // lpWindowName
-		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX, // WS_MAXMIZEBOX を無効化
-		CW_USEDEFAULT,       // X
-		CW_USEDEFAULT,       // Y
-		INIT_WINDOW_WIDTH,   // nWidth
-		INIT_WINDOW_HEIGHT,  // nHeight
-		nullptr,             // hWndParent
-		nullptr,             // hMenu
-		hInstance,           // hInstance
-		nullptr              // lpParam
+	HWND hWnd = CreateWindowEx(
+		0,						// dwExStyle
+		WindowClassName,		// lpClassName
+		WindowTitle,			// lpWindowName
+		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX,	// WS_MAXMIZEBOX を無効化
+		CW_USEDEFAULT,			// X
+		CW_USEDEFAULT,			// Y
+		INIT_WINDOW_WIDTH,		// nWidth
+		INIT_WINDOW_HEIGHT,		// nHeight
+		nullptr,				// hWndParent
+		nullptr,				// hMenu
+		hInstance,				// hInstance
+		nullptr					// lpParam
 	);
 
 	if (!hWnd)
@@ -110,13 +107,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_GETMINMAXINFO:
 	{
+		// ウィンドウの最小最大サイズの確認が必要なときここに来る
+
 		MINMAXINFO* pMinMaxInfo = (MINMAXINFO*)lParam;
 
-		// 最小サイズの制限
+		// 最小サイズの制限（不用な場合は次の2行をコメントアウト）
 		pMinMaxInfo->ptMinTrackSize.x = MIN_WINDOW_WIDTH;
 		pMinMaxInfo->ptMinTrackSize.y = MIN_WINDOW_HEIGHT;
 
-		// 最大サイズの制限
+		// 最大サイズの制限（不用な場合は次の2行をコメントアウト）
 		pMinMaxInfo->ptMaxTrackSize.x = MAX_WINDOW_WIDTH;
 		pMinMaxInfo->ptMaxTrackSize.y = MAX_WINDOW_HEIGHT;
 
@@ -125,43 +124,59 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT:
 	{
+		// 画面を更新すべきタイミングでこのメッセージが来る
+
+		// 前準備
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
+
+		// 背景を塗りつぶす
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
-		// ウィンドウサイズなどを表示
+		// ウィンドウのサイズを表示
 		RECT rc;
 		GetWindowRect(hWnd, &rc);
 		WCHAR text[100];
-		MySprintf(text,
-			L"Window Size = (%d, %d)\n\n"
-			L"002からの変更：\n"
-			L"設定ファイルの形式をINIからXMLに変えた。\n"
-			, Width(rc), Height(rc));
+		MySprintf(text, L"Window Size = (%d, %d)", Width(rc), Height(rc));
 		MyTextOut(hdc, 8, 8, text);
 
+		// 後始末
 		EndPaint(hWnd, &ps);
 		break;
 	}
 
 	case WM_SETCURSOR:
 	{
+		// マウスカーソルを変えるべきタイミングでこのメッセージが来る
+
+		// マウスカーソルの下に何があるかチェック
 		WORD hitTest = LOWORD(lParam);
+
+		// クライアント領域の場合は、標準の矢印カーソルにする
 		if (hitTest == HTCLIENT)
 		{
 			HCURSOR hCursor = LoadCursor(0, IDC_ARROW);
 			SetCursor(hCursor);
 			return TRUE;	// 自分でカーソルを設定した場合はTRUEを返す
 		}
+
+		// それ以外（枠線上など）の場合は、デフォルト処理にまかせる
 		break;
 	}
 
 	case WM_DESTROY:
-		SaveSettings(hWnd);	// 設定を保存
+	{
+		// ウィンドウが破棄されたとき、このメッセージが来る
 
+		// ウィンドウサイズを保存する
+		SaveSettings(hWnd);
+
+		// メッセージループを終了する
 		PostQuitMessage(0);
 		break;
 	}
+
+	} // end of switch (message)
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }

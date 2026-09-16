@@ -52,7 +52,7 @@ int APIENTRY wWinMain(
 // メインウィンドウのウィンドウクラスを登録
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-	WNDCLASSEX wcex = { sizeof(WNDCLASSEX) };
+	WNDCLASSEX wcex = { sizeof(WNDCLASSEX) }; // 先頭要素のみ指定、残りを0で埋める
 
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = WndProc;

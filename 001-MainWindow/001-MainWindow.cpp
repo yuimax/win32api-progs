@@ -56,15 +56,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = WndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
 	wcex.hInstance = hInstance;
-	wcex.hIcon = nullptr;			// アイコンがデフォルトでよければ、nullptrにする
-	wcex.hCursor = nullptr;			// カーソルを自分で設定するなら、nullptrにする
-	wcex.hbrBackground = nullptr;	// 背景を自分で描画するなら、nullptrにする
-	wcex.lpszMenuName = nullptr;	// メニューを自分で用意するなら、nullptrにする
 	wcex.lpszClassName = WindowClassName;
-	wcex.hIconSm = nullptr;			// hIcon と同じでよい場合は、nullptrにする
 
 	return RegisterClassEx(&wcex);
 }

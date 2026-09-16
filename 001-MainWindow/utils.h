@@ -7,7 +7,7 @@
 // sprintf()と同じだがバッファーオーバーフローを回避する
 // すべて出力できればTRUEを返し、出力を打ち切った場合はFALSEを返す
 template <size_t N>
-BOOL MySprintf(WCHAR(&buf)[N], LPCWSTR format, ...) {
+BOOL MySprintf(WCHAR (&buf)[N], LPCWSTR format, ...) {
     va_list args;
     va_start(args, format);
     int count = _vsnwprintf_s(buf, N, _TRUNCATE, format, args);

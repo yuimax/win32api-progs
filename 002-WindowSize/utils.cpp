@@ -28,7 +28,6 @@ struct Initializer {
 	Initializer() {
 		WCHAR exePath[MAX_PATH];
 		GetModuleFileName(NULL, exePath, MAX_PATH);
-
 		WCHAR drive[_MAX_DRIVE];
 		WCHAR dir[_MAX_DIR];
 		WCHAR fname[_MAX_FNAME];
@@ -38,9 +37,31 @@ struct Initializer {
 	}
 };
 
-static Initializer initializer;
+// グローバルな変数は WinMain() に先行して初期化される
+static Initializer init;
 
-// 整数を保存する
+// 最も近いモニターのワークエリアを取得し、
+// 四角形(x, y, x+cx, y+cy)がその中に収まるように(x, y)を書き換える
+static void MoveToSafeLocation(int& x, int& y, int cx, int cy)
+{
+	RECT rc{ x, y, x + cx, y + cy };
+	HMONITOR hMonitor = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
+	if (hMonitor) {
+		MONITORINFO mi = { sizeof(MONITORINFO) };
+		if (GetMonitorInfo(hMonitor, &mi)) {
+			RECT area = mi.rcWork;
+			x = min(max(x, area.left), area.right - cx);
+			y = min(max(y, area.top), area.bottom - cy);
+		}
+	}
+}
+
+// メモ：INIファイル内の日本語データについて
+//	デフォルトでShift_JISとして保存される
+//	ファイルをUTF-16LEに変換しても読み書きできる
+//	ファイルをUTF-8やUTF-16BEに変換すると日本語は読み書きできない
+
+// INIファイルに整数を保存する
 static void SaveInt(LPCWSTR section, LPCWSTR key, int value)
 {
 	WCHAR buffer[100] = { 0 };
@@ -48,7 +69,7 @@ static void SaveInt(LPCWSTR section, LPCWSTR key, int value)
 	WritePrivateProfileString(section, key, buffer, ConfigFilePath);
 }
 
-// 整数を復元する
+// INIファイルから整数を読み出す
 static int LoadInt(LPCWSTR section, LPCWSTR key, int defaultValue)
 {
 	return GetPrivateProfileInt(section, key, defaultValue, ConfigFilePath);
@@ -67,23 +88,6 @@ void SaveSettings(HWND hWnd)
 	SaveInt(L"MainWindow", L"Height", Height(rc));
 }
 
-// 最も近いモニターのワークエリアを取得し、
-// 四角形(x, y, x+cx, y+cy)がワークエリアに収まるように調整した位置(x, y)を返す
-static POINT GetSafeLocation(int x, int y, int cx, int cy)
-{
-	RECT rc{ x, y, x + cx, y + cy };
-	HMONITOR hMonitor = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
-	if (hMonitor) {
-		MONITORINFO mi = { sizeof(MONITORINFO) };
-		if (GetMonitorInfo(hMonitor, &mi)) {
-			RECT area = mi.rcWork;
-			x = min(max(x, area.left), area.right - cx);
-			y = min(max(y, area.top), area.bottom - cy);
-		}
-	}
-	return POINT{ x, y };
-}
-
 // INIファイルから設定を読み出す
 void LoadSettings(HWND hWnd)
 {
@@ -95,7 +99,7 @@ void LoadSettings(HWND hWnd)
 	int cx = LoadInt(L"MainWindow", L"Width", Width(rc));
 	int cy = LoadInt(L"MainWindow", L"Height", Height(rc));
 
-	POINT pt = GetSafeLocation(x, y, cx, cy);
+	MoveToSafeLocation(x, y, cx, cy);	// (x,y)を画面に収まる位置に調整する
 
-	SetWindowPos(hWnd, NULL, pt.x, pt.y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
+	SetWindowPos(hWnd, NULL, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
 }

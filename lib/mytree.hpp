@@ -58,24 +58,27 @@ private:
 	}
 
 	// シリアライズ用のヘルパー（再帰）
-	static void serializeInternal(const std::shared_ptr<MyTree>& node, int depth, std::ostringstream& oss) {
+	static void serialize(const std::shared_ptr<MyTree>& node, int depth, std::ostringstream& oss) {
 		if (!node) return;
 
 		std::string indent(depth * 2, ' ');
 		std::string escapedKey = escapeXml(node->Key);
 		std::string escapedVal = escapeXml(node->Value);
+		std::string attribKey = " name=\"" + escapedKey + "\"";
+		std::string attribVal = escapedVal.empty() ? "" : " value=\"" + escapedVal + "\"";
 
 		if (node->Children.empty()) {
-			oss << indent << "<node key=\"" << escapedKey << "\" value=\"" << escapedVal << "\" />\n";
+			oss << indent << "<node" << attribKey << attribVal << " />\n";
 		}
 		else {
-			oss << indent << "<node key=\"" << escapedKey << "\" value=\"" << escapedVal << "\">\n";
+			oss << indent << "<node" << attribKey << attribVal << ">\n";
 			for (const auto& child : node->Children) {
-				serializeInternal(child, depth + 1, oss);
+				serialize(child, depth + 1, oss);
 			}
 			oss << indent << "</node>\n";
 		}
 	}
+
 
 public:
 	// コンストラクタ
@@ -124,10 +127,16 @@ public:
 	}
 
 	// 指定した key を持つ最初の子ノードの値を std::string として取得
+	// 条件を満たす子ノードがなければ defaultValue を返す
+	std::string getString(const std::string& key, const std::string& defaltValue) const {
+		auto child = getChild(key);
+		return child ? child->Value : defaltValue;
+	}
+
+	// 指定した key を持つ最初の子ノードの値を std::string として取得
 	// 条件を満たす子ノードがなければ空文字列 "" を返す
 	std::string getString(const std::string& key) const {
-		auto child = getChild(key);
-		return child ? child->Value : "";
+		return getString(key, "");
 	}
 
 	// 指定した key を持つ最初の子ノードの値を int として取得
@@ -154,12 +163,12 @@ public:
 	std::string ToString() const {
 		std::ostringstream oss;
 		oss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-		serializeInternal(const_cast<MyTree*>(this)->shared_from_this(), 0, oss);
+		serialize(const_cast<MyTree*>(this)->shared_from_this(), 0, oss);
 		return oss.str();
 	}
 
 	// XML文字列からツリーを構築する
-	// 不正な XML なら nullptr を返す
+	// MyTreeに変換できない場合はnullptrを返す
 	static std::shared_ptr<MyTree> FromString(const std::string& data) {
 		std::istringstream iss(data);
 		std::string line;
@@ -168,7 +177,7 @@ public:
 		std::vector<std::shared_ptr<MyTree>> stack;
 
 		while (std::getline(iss, line)) {
-			// 前後の空白トリム
+			// 前後の空白をトリム
 			size_t start = line.find_first_not_of(" \t\r\n");
 			if (start == std::string::npos) continue;
 			size_t end = line.find_last_not_of(" \t\r\n");
@@ -179,9 +188,9 @@ public:
 				continue;
 			}
 
-			// 自己閉じタグの場合: <node key="..." value="..." />
+			// 自己閉じタグの場合: <node ... />
 			if (line.rfind("<node", 0) == 0 && line.find("/>") != std::string::npos) {
-				std::string key = getAttributeValue(line, "key");
+				std::string key = getAttributeValue(line, "name");
 				std::string val = getAttributeValue(line, "value");
 				auto newNode = std::make_shared<MyTree>(key, val);
 
@@ -198,9 +207,9 @@ public:
 					stack.pop_back();
 				}
 			}
-			// 開始タグの場合: <node key="..." value="...">
+			// 開始タグの場合: <node ... >
 			else if (line.rfind("<node", 0) == 0) {
-				std::string key = getAttributeValue(line, "key");
+				std::string key = getAttributeValue(line, "name");
 				std::string val = getAttributeValue(line, "value");
 				auto newNode = std::make_shared<MyTree>(key, val);
 
@@ -216,4 +225,5 @@ public:
 
 		return root;
 	}
+
 };

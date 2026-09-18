@@ -7,9 +7,8 @@ static BOOL IsValidUtf8(const char* str)
 	return MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str, -1, nullptr, 0) > 0;
 }
 
-// ウィンドウにテキストを表示する
-// テキストに改行(\n)を含めることができる
-void MyTextOut(HDC hdc, int x, int y, const char* str)
+// 文字列をstd::vector<WCHAR>に変換する
+static std::vector<WCHAR> ToWideChar(const char* str)
 {
 	// 元の文字列がUTF-8でなければcp932(Shift_JIS)とみなす
 	int codepage = IsValidUtf8(str) ? CP_UTF8 : 932;
@@ -17,13 +16,23 @@ void MyTextOut(HDC hdc, int x, int y, const char* str)
 	// ワイド文字に変換した場合の文字数を得る（末尾の'\0'を含む）
 	int wlen = MultiByteToWideChar(codepage, 0, str, -1, nullptr, 0);
 
-	// バッファを確保し、ワイド文字に変換する
+	// バッファを確保し、strをワイド文字に変換して書き込む（末尾の'\0'を含む）
 	std::vector<WCHAR> wbuf(wlen);
 	MultiByteToWideChar(codepage, 0, str, -1, &wbuf[0], wlen);
 
+	return wbuf;
+}
+
+// ウィンドウにテキストを表示する
+// テキストに改行(\n)を含めることができる
+void MyTextOut(HDC hdc, int x, int y, const char* str)
+{
+	// テキストをワイド文字に変換する
+	auto wbuf = ToWideChar(str);
+
 	// Win32APIのDrawText()を呼び出し、テキストを画面に表示する
 	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom
-	DrawText(hdc, &wbuf[0], wlen - 1, &rc, DT_NOCLIP | DT_NOPREFIX);
+	DrawText(hdc, &wbuf[0], (int)wbuf.size() - 1, &rc, DT_NOCLIP | DT_NOPREFIX);
 
 	// メモ： DrawText()について
 	//	第2引数は表示するテキストで、ワイド文字列（WCHARへのポインタ）を指定する

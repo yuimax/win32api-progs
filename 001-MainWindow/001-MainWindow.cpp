@@ -1,6 +1,7 @@
 // 001-MainWindow.cpp
 
 #include "framework.h"
+#include "utils.h"
 
 // ウィンドウの初期サイズ
 constexpr int INIT_WINDOW_WIDTH = 640;
@@ -108,10 +109,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// 背景を塗りつぶす
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
-		// "Hello world!" を表示
-		WCHAR text[100];
-		MySprintf(text, L"Hello world!");
-		MyTextOut(hdc, 10, 10, text);
+		// テキストを表示する
+		MyTextOut(hdc, 10, 10, "Hello world!\nこんにちは世界！\n");
 
 		// 後始末
 		EndPaint(hWnd, &ps);

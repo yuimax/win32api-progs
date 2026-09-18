@@ -1,12 +1,13 @@
 // 002-WindowSize.cpp
 
 #include "framework.h"
+#include "utils.h"
 
 // ウィンドウの初期サイズ
 constexpr int INIT_WINDOW_WIDTH = 640;
 constexpr int INIT_WINDOW_HEIGHT = 480;
 
-// ★ウィンドウの最小サイズ・最大サイズ
+// ウィンドウの最小サイズ・最大サイズ
 constexpr int MIN_WINDOW_WIDTH = 400;
 constexpr int MIN_WINDOW_HEIGHT = 300;
 constexpr int MAX_WINDOW_WIDTH = 1000;
@@ -75,7 +76,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		0,						// dwExStyle
 		WindowClassName,		// lpClassName
 		WindowTitle,			// lpWindowName
-		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX,	// ★ WS_MAXMIZEBOX を無効化
+		WS_OVERLAPPEDWINDOW,	// dwStyle
 		CW_USEDEFAULT,			// X
 		CW_USEDEFAULT,			// Y
 		INIT_WINDOW_WIDTH,		// nWidth
@@ -91,7 +92,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
-	LoadSettings(hWnd);	// ★設定の復元を追加
+	LoadSettings(hWnd);	// 設定の復元
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
@@ -105,23 +106,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
 
-	case WM_GETMINMAXINFO:
-	{
-		// ★ウィンドウの最小最大サイズの確認が必要なときここに来る
-
-		MINMAXINFO* pMinMaxInfo = (MINMAXINFO*)lParam;
-
-		// 最小サイズの制限（不用な場合は次の2行をコメントアウト）
-		pMinMaxInfo->ptMinTrackSize.x = MIN_WINDOW_WIDTH;
-		pMinMaxInfo->ptMinTrackSize.y = MIN_WINDOW_HEIGHT;
-
-		// 最大サイズの制限（不用な場合は次の2行をコメントアウト）
-		pMinMaxInfo->ptMaxTrackSize.x = MAX_WINDOW_WIDTH;
-		pMinMaxInfo->ptMaxTrackSize.y = MAX_WINDOW_HEIGHT;
-
-		break;
-	}
-
 	case WM_PAINT:
 	{
 		// 画面を更新すべきタイミングでこのメッセージが来る
@@ -133,12 +117,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// 背景を塗りつぶす
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
-		// ★ウィンドウのサイズを表示
+		// テキストを表示する
 		RECT rc;
 		GetWindowRect(hWnd, &rc);
-		WCHAR text[100];
-		MySprintf(text, L"Window Size = (%d, %d)", Width(rc), Height(rc));
-		MyTextOut(hdc, 8, 8, text);
+		char text[100];
+		MySprintf(text, "Window Size = (%d, %d)\n", Width(rc), Height(rc));
+		MyTextOut(hdc, 10, 10, text);
 
 		// 後始末
 		EndPaint(hWnd, &ps);
@@ -168,7 +152,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		// ウィンドウが破棄されたとき、このメッセージが来る
 
-		// ★ウィンドウサイズを保存する
+		// 設定を保存する
 		SaveSettings(hWnd);
 
 		// メッセージループを終了する

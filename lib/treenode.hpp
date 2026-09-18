@@ -1,15 +1,18 @@
-#include <windows.h>
 #include <string>
+#include <vector>
 #include <sstream>
 
 // 階層構造でデータを管理するクラス
 class TreeNode : public std::enable_shared_from_this<TreeNode> {
-private:
+	friend class Tree;
+
+protected:
 	std::string Key;
 	std::string Value;
 	std::weak_ptr<TreeNode> Parent;
 	std::vector<std::shared_ptr<TreeNode>> Children;
 
+private:
 	// 特殊文字の簡易エスケープ（XML用）
 	static std::string escapeXml(const std::string& str) {
 		std::string result;
@@ -58,7 +61,7 @@ private:
 	}
 
 	// シリアライズ用のヘルパー（再帰）
-	static void serialize(const std::shared_ptr<const TreeNode>& node, int depth, std::ostringstream& oss) {
+	static void serialize(const std::shared_ptr<TreeNode>& node, int depth, std::ostringstream& oss) {
 		if (!node) return;
 
 		std::string indent(depth * 2, ' ');
@@ -79,41 +82,12 @@ private:
 		}
 	}
 
-	// Encodingが不明な文字列をUTF-8に統一する
-	static std::string Utf8(const std::string& str)
-	{
-		// UTF-8なら何もしない
-		if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str.c_str(), -1, nullptr, 0) > 0) {
-			return str;
-		}
-
-		// UTF-8でなければCP932（Shift_JIS）とみなす
-		const int cp932 = 932;
-
-		// CP932からワイド文字に変換する
-		int wlen = MultiByteToWideChar(cp932, 0, str.c_str(), -1, nullptr, 0);
-		std::vector<WCHAR> wbuf(wlen);
-		MultiByteToWideChar(cp932, 0, str.c_str(), -1, &wbuf[0], wlen);
-
-		// ワイド文字列からUTF-8に変換する
-		int utf8len = WideCharToMultiByte(CP_UTF8, 0, &wbuf[0], wlen, nullptr, 0, nullptr, nullptr);
-		std::vector<char> utf8buf(utf8len);
-		WideCharToMultiByte(CP_UTF8, 0, &wbuf[0], wlen, &utf8buf[0], utf8len, nullptr, nullptr);
-
-		// std::stringとして返す
-		return std::string(&utf8buf[0], utf8buf.size() - 1);
-	}
 
 public:
-	// コンストラクタ / デストラクタ
+	// コンストラクタ
 	TreeNode() = default;
-	explicit TreeNode(const std::string& key) : Key(Utf8(key)) {}
-	TreeNode(const std::string& key, const std::string& value) : Key(Utf8(key)), Value(Utf8(value)) {}
-	virtual ~TreeNode() = default; // 派生クラスのために仮想デストラクタを追加
-
-	// アクセサ
-	const std::string& getKey() const { return Key; }
-	const std::string& getValue() const { return Value; }
+	explicit TreeNode(const std::string& key) : Key(key) {}
+	TreeNode(const std::string& key, const std::string& value) : Key(key), Value(value) {}
 
 	// 親ノードの取得
 	std::shared_ptr<TreeNode> getParent() const { return Parent.lock(); }
@@ -122,16 +96,10 @@ public:
 	std::vector<std::shared_ptr<TreeNode>> getChildren() const { return Children; }
 
 	// 子ノードの追加
-	void addChild(std::shared_ptr<TreeNode> child) {
-		if (child) {
-			child->Parent = shared_from_this();
-			this->Children.push_back(child);
-		}
-	}
-
 	std::shared_ptr<TreeNode> addChild(const std::string& key, const std::string& value) {
 		auto child = std::make_shared<TreeNode>(key, value);
-		addChild(child);
+		child->Parent = shared_from_this();
+		this->Children.push_back(child);
 		return child;
 	}
 
@@ -143,11 +111,18 @@ public:
 		return addChild(key, std::to_string(value));
 	}
 
+	void addChild(std::shared_ptr<TreeNode> child) {
+		if (child) {
+			child->Parent = shared_from_this();
+			this->Children.push_back(child);
+		}
+	}
+
 	// 指定した key を持つ最初の子ノードを取得
+	// 条件を満たす子ノードがなければ nullptr を返す
 	std::shared_ptr<TreeNode> getChild(const std::string& key) const {
-		const std::string& utf8key = Utf8(key);
 		for (const auto& child : this->Children) {
-			if (child->Key == utf8key) {
+			if (child->Key == key) {
 				return child;
 			}
 		}
@@ -155,12 +130,20 @@ public:
 	}
 
 	// 指定した key を持つ最初の子ノードの値を std::string として取得
-	std::string getString(const std::string& key, const std::string& defaultValue) const {
+	// 条件を満たす子ノードがなければ defaultValue を返す
+	std::string getString(const std::string& key, const std::string& defaltValue) const {
 		auto child = getChild(key);
-		return child ? child->Value : Utf8(defaultValue);
+		return child ? child->Value : defaltValue;
+	}
+
+	// 指定した key を持つ最初の子ノードの値を std::string として取得
+	// 条件を満たす子ノードがなければ空文字列 "" を返す
+	std::string getString(const std::string& key) const {
+		return getString(key, "");
 	}
 
 	// 指定した key を持つ最初の子ノードの値を int として取得
+	// 条件を満たす子ノードがなければ defaultValue を返す
 	int getInt(const std::string& key, int defaultValue) const {
 		auto child = getChild(key);
 		if (child) {
@@ -174,36 +157,40 @@ public:
 		return defaultValue;
 	}
 
-	// 空のノードを作る
+	// 空のツリーを作る
 	static std::shared_ptr<TreeNode> Create(const std::string& name) {
 		return std::make_shared<TreeNode>(name);
 	}
 
-	// ツリー構造をXML文字列に変換する
-	virtual std::string ToString() const {
+	// ツリーの構造をXML文字列に変換する
+	std::string ToString() const {
 		std::ostringstream oss;
-		serialize(shared_from_this(), 0, oss);
+		serialize(const_cast<TreeNode*>(this)->shared_from_this(), 0, oss);
 		return oss.str();
 	}
 
 	// XML文字列からツリーを構築する
+	// TreeNodeに変換できない場合はnullptrを返す
 	static std::shared_ptr<TreeNode> FromString(const std::string& data) {
-		std::istringstream iss(Utf8(data));
+		std::istringstream iss(data);
 		std::string line;
 
 		std::shared_ptr<TreeNode> root = nullptr;
 		std::vector<std::shared_ptr<TreeNode>> stack;
 
 		while (std::getline(iss, line)) {
+			// 前後の空白をトリム
 			size_t start = line.find_first_not_of(" \t\r\n");
 			if (start == std::string::npos) continue;
 			size_t end = line.find_last_not_of(" \t\r\n");
 			line = line.substr(start, end - start + 1);
 
+			// XML宣言やコメントはスキップ
 			if (line.rfind("<?", 0) == 0 || line.rfind("<!--", 0) == 0) {
 				continue;
 			}
 
+			// 自己閉じタグの場合: <node ... />
 			if (line.rfind("<node", 0) == 0 && line.find("/>") != std::string::npos) {
 				std::string key = getAttributeValue(line, "name");
 				std::string val = getAttributeValue(line, "value");
@@ -216,11 +203,13 @@ public:
 					stack.back()->addChild(newNode);
 				}
 			}
+			// 閉じタグの場合: </node>
 			else if (line.rfind("</node>", 0) == 0) {
 				if (!stack.empty()) {
 					stack.pop_back();
 				}
 			}
+			// 開始タグの場合: <node ... >
 			else if (line.rfind("<node", 0) == 0) {
 				std::string key = getAttributeValue(line, "name");
 				std::string val = getAttributeValue(line, "value");
@@ -238,17 +227,23 @@ public:
 
 		return root;
 	}
+
 };
 
-// TreeNode を継承したツリークラス
-class MyTree : public TreeNode {
+// TreeNode をルートに持つツリーを管理するクラス
+class Tree : public TreeNode {
 private:
-	MyTree() = default;
+	std::string Encoding = "UTF-8";
 
 public:
-	// ツリー全体をヘッダ付きのXML文字列に変換
-	std::string ToString() const override {
-		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-			+ TreeNode::ToString();
+	// デフォルトコンストラクタ
+	Tree() = default;
+	Tree(const std::string& name) : TreeNode(name) {}
+
+	// ツリー全体を XML 文字列に変換
+	std::string ToString() const {
+		std::string xmlstr = "<?xml version=\"1.0\" encoding=\"" + Encoding + "\"?>\n";
+		xmlstr += ((TreeNode*)this)->ToString();
+		return xmlstr;
 	}
 };

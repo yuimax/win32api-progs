@@ -13,6 +13,3 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-
-// プロジェクト専用のヘッダーファイル
-#include "utils.h"

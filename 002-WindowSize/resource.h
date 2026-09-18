@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by 001-MainWindow.rc
+// Used by 002-WindowSize.rc
 
 // 新しいオブジェクトの次の既定値
 // 

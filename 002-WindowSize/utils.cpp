@@ -1,71 +1,71 @@
 #include <windows.h>
 #include <vector>
 
-// 文字列がUTF-8かどうか判定する
+// ������UTF-8���ǂ������肷��
 static BOOL IsValidUtf8(const char* str)
 {
 	return MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str, -1, nullptr, 0) > 0;
 }
 
-// 文字列をstd::vector<WCHAR>に変換する
+// �������std::vector<WCHAR>�ɕϊ�����
 static std::vector<WCHAR> ToWideChar(const char* str)
 {
-	// 元の文字列がUTF-8でなければcp932(Shift_JIS)とみなす
+	// ���̕�����UTF-8�łȂ����cp932(Shift_JIS)�Ƃ݂Ȃ�
 	int codepage = IsValidUtf8(str) ? CP_UTF8 : 932;
 
-	// ワイド文字に変換した場合の文字数を得る（末尾の'\0'を含む）
+	// ���C�h�����ɕϊ������ꍇ�̕������𓾂�i������'\0'���܂ށj
 	int wlen = MultiByteToWideChar(codepage, 0, str, -1, nullptr, 0);
 
-	// バッファを確保し、strをワイド文字に変換して書き込む（末尾の'\0'を含む）
+	// �o�b�t�@���m�ۂ��Astr�����C�h�����ɕϊ����ď������ށi������'\0'���܂ށj
 	std::vector<WCHAR> wbuf(wlen);
 	MultiByteToWideChar(codepage, 0, str, -1, &wbuf[0], wlen);
 
 	return wbuf;
 }
 
-// ウィンドウにテキストを表示する
-// テキストに改行(\n)を含めることができる
+// �E�B���h�E�Ƀe�L�X�g��\������
+// �e�L�X�g�ɉ��s(\n)���܂߂邱�Ƃ��ł���
 void MyTextOut(HDC hdc, int x, int y, const char* str)
 {
-	// テキストをワイド文字に変換する
+	// �e�L�X�g�����C�h�����ɕϊ�����
 	auto wbuf = ToWideChar(str);
 
-	// Win32APIのDrawText()を呼び出し、テキストを画面に表示する
+	// Win32API��DrawText()���Ăяo���A�e�L�X�g����ʂɕ\������
 	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom
 	DrawText(hdc, &wbuf[0], (int)wbuf.size() - 1, &rc, DT_NOCLIP | DT_NOPREFIX);
 
-	// メモ： DrawText()について
-	//	第2引数は表示するテキストで、ワイド文字列（WCHARへのポインタ）を指定する
-	//	テキスト内では改行コード(\n)が有効
-	//	テキスト内の文字'&'は「次の文字を下線で修飾する」という意味になる
-	//	'&'を普通の文字として表示するには、書式に DT_NOPREFIX を含める
-	//	第3引数は末尾の'\0'を除く文字数で、-1を指定すると自動計算する
-	//	第4引数は表示範囲で、書式に DT_NOCLIP がある場合は rc.right と rc.bottom を無視
-	//	第5引数は書式で、右詰めやセンタリングなどいろいろ
+	// �����F DrawText()�ɂ���
+	//	��2�����͕\������e�L�X�g�ŁA���C�h������iWCHAR�ւ̃|�C���^�j���w�肷��
+	//	�e�L�X�g���ł͉��s�R�[�h(\n)���L��
+	//	�e�L�X�g���̕���'&'�́u���̕����������ŏC������v�Ƃ����Ӗ��ɂȂ�
+	//	'&'�𕁒ʂ̕����Ƃ��ĕ\������ɂ́A������ DT_NOPREFIX ���܂߂�
+	//	��3�����͖�����'\0'�������������ŁA-1���w�肷��Ǝ����v�Z����
+	//	��4�����͕\���͈͂ŁA������ DT_NOCLIP ������ꍇ�� rc.right �� rc.bottom �𖳎�
+	//	��5�����͏����ŁA�E�l�߂�Z���^�����O�Ȃǂ��낢��
 
-	// メモ： DrawTextA() について
-	//	DrawTextA() という別のWin32APIを使うと、
-	//	WCHAR変換は不用で、テキストを char* str のままAPIに渡せる
-	//	ただし日本語データはShift_JISに統一する必要がある
-	//	Shift_JISに統一するより、WCHARに変換するほうが簡単である
+	// �����F DrawTextA() �ɂ���
+	//	DrawTextA() �Ƃ����ʂ�Win32API���g���ƁA
+	//	WCHAR�ϊ��͕s�p�ŁA�e�L�X�g�� char* str �̂܂�API�ɓn����
+	//	���������{��f�[�^��Shift_JIS�ɓ��ꂷ��K�v������
+	//	Shift_JIS�ɓ��ꂷ����AWCHAR�ɕϊ�����ق����ȒP�ł���
 }
 
-//////////////////////////////////////////////// 002-WindowSize で追加
+//////////////////////////////////////////////// 002-WindowSize �Œǉ�
 
 #include <string>
 #include <fstream>
 #include <iterator>
 #include "utils.h"
-#include "../lib/mytree.hpp"
+#include "../lib/treenode.hpp"
 
 using StreamIt = std::istreambuf_iterator<char>;
 
-// 設定ファイルのパス
-//	メモ：パスに日本語が含まれる可能性もあるので WCHAR[] 型が推奨される。
-//	char[] 型を使う場合、ファイル名はShift_JISでなければならない。UTF-8は使えない。
+// �ݒ�t�@�C���̃p�X
+//	�����F�p�X�ɓ��{�ꂪ�܂܂��\��������̂� WCHAR[] �^�����������B
+//	char[] �^���g���ꍇ�A�t�@�C������Shift_JIS�łȂ���΂Ȃ�Ȃ��BUTF-8�͎g���Ȃ��B
 static WCHAR ConfigFilePath[MAX_PATH];
 
-// WinMain() が実行される前に ConfigFilePath[] を初期化する
+// WinMain() �����s�����O�� ConfigFilePath[] ������������
 struct Initializer {
 	Initializer() {
 		WCHAR exePath[MAX_PATH];
@@ -79,11 +79,11 @@ struct Initializer {
 	}
 };
 
-// グローバルな変数は WinMain() に先行して初期化される
+// �O���[�o���ȕϐ��� WinMain() �ɐ�s���ď����������
 static Initializer init;
 
-// 最も近いモニターのワークエリアを取得し、
-// 四角形(x, y, x+cx, y+cy)がその中に収まるように(x, y)を書き換える
+// �ł��߂����j�^�[�̃��[�N�G���A���擾���A
+// �l�p�`(x, y, x+cx, y+cy)�����̒��Ɏ��܂�悤��(x, y)������������
 static void MoveToSafeLocation(int& x, int& y, int cx, int cy)
 {
 	RECT rc{ x, y, x + cx, y + cy };
@@ -98,31 +98,31 @@ static void MoveToSafeLocation(int& x, int& y, int cx, int cy)
 	}
 }
 
-// 設定の保存
+// �ݒ�̕ۑ�
 void SaveSettings(HWND hWnd)
 {
 	WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
 	GetWindowPlacement(hWnd, &wp);
 	RECT& rc = wp.rcNormalPosition;
 
-	auto config = MyTree::Create("config");
+	auto config = TreeNode::Create("config");
 	auto section = config->addChild("MainWindow");
 	section->addChild("X", rc.left);
 	section->addChild("Y", rc.top);
 	section->addChild("Width", Width(rc));
 	section->addChild("Height", Height(rc));
-	section->addChild("テストキー", "テスト値");
+	section->addChild("�e�X�g�L�[", "�e�X�g�l");
 
-	std::ofstream file(ConfigFilePath);	// VC++ではパスにワイド文字列が使える
+	std::ofstream file(ConfigFilePath);
 	if (file.is_open()) {
 		file << config->ToString();
 	}
 	else {
-		MessageBox(hWnd, L"設定ファイルに書き込めません", L"Error", MB_OK);
+		MessageBox(hWnd, L"�ݒ�t�@�C���ɏ������߂܂���", L"Error", MB_OK);
 	}
 }
 
-// 設定の復元
+// �ݒ�̕���
 void LoadSettings(HWND hWnd)
 {
 	RECT rc;
@@ -133,19 +133,19 @@ void LoadSettings(HWND hWnd)
 	int cx = Width(rc);
 	int cy = Height(rc);
 
-	std::ifstream file(ConfigFilePath);	// VC++ではパスにワイド文字列が使える
+	std::ifstream file(ConfigFilePath);
 	if (file.is_open()) {
 		auto xmlstr = std::string{ StreamIt(file), StreamIt() };
 		auto config = TreeNode::FromString(xmlstr);
 		if (config) {
 			auto section = config->getChild("MainWindow");
 			if (section) {
-				// 保存データがあれば取り出す
+				// �ۑ��f�[�^������Ύ��o��
 				x = section->getInt("X", x);
 				y = section->getInt("Y", y);
 				cx = section->getInt("Width", cx);
 				cy = section->getInt("Height", cy);
-				// ウィンドウが画面内に収まるように位置を調整
+				// �E�B���h�E����ʓ��Ɏ��܂�悤�Ɉʒu�𒲐�
 				MoveToSafeLocation(x, y, cx, cy);
 			}
 		}

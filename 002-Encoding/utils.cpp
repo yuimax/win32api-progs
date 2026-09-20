@@ -3,10 +3,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <cstring>
-#include <memory>
-#include <algorithm>
-#include <string_view>
+#include <string.h>	// for strlen()
 
 // ウィンドウにワイド文字のテキストを表示する
 // テキストに改行(\n)を含めることができる
@@ -25,9 +22,17 @@ void MyTextOut(HDC hdc, int x, int y, LPCWSTR wstr)
 	//	第5引数は書式で、右詰めやセンタリングなどいろいろ
 }
 
+// 成功フラグ付き戻り値
+template <typename T>
+struct result {
+	bool success;
+	T value;
+};
+
 // バイナリのdataがUTF-8かどうかチェックする
-// UTF-8の途中で切れていてもsizeバイトまで矛盾がなければtrueとする
-static bool IsValidUtf8(const char* data, size_t size) {
+// UTF-8判定結果(bool)と、UTF-8のバイト数(size_t)を返す
+// UTF-8の途中で切れていても、そこまで矛盾がなければ判定結果はtrueとする
+static result<size_t> IsValidUtf8(const char* data, size_t size) {
 	auto bytes = (const unsigned char*)data;
 	size_t i = 0;
 	while (i < size) {
@@ -62,27 +67,27 @@ static bool IsValidUtf8(const char* data, size_t size) {
 			}
 		}
 		else {	// 先頭バイトとして不正な値 (0x80-0xC1, 0xF5-0xFF)
-			return false;
+			return { false, i };
 		}
 
 		// 後続バイトの検証
 		for (size_t j = 1; j < len; ++j) {
 			if (i + j >= size) {
 				// 末尾でデータが切れている場合、ここまで矛盾がないので true を返す
-				return true;
+				return { true, i };
 			}
 
 			c = bytes[i + j];
 			if (j == 1) {
 				// 2バイト目特有の範囲チェック（Overlong/サロゲート対策）
 				if (c < minSecond || c > maxSecond) {
-					return false;
+					return { false, i };
 				}
 			}
 			else {
 				// 3バイト目、4バイト目は 0x80-0xBF の範囲内か
 				if (c < 0x80 || c > 0xBF) {
-					return false;
+					return { false, i };
 				}
 			}
 		}
@@ -90,7 +95,7 @@ static bool IsValidUtf8(const char* data, size_t size) {
 		i += len;
 	}
 
-	return true;
+	return { true, i };
 }
 
 // 文字列をワイド文字に変換し、std::vector<WCHAR>に格納する
@@ -98,15 +103,25 @@ static bool IsValidUtf8(const char* data, size_t size) {
 // 出力先の末尾に必ずL'\0'が付くのでワイド文字列としても使える
 static std::vector<WCHAR> ToWCHAR(const char* str)
 {
-	// UTF-8でなければShift_JISとみなす(CodePage=932)
-	int codepage = IsValidUtf8(str, strlen(str)) ? CP_UTF8 : 932;
+	size_t size = strlen(str);	// 末尾の'\0'を含まない長さ
+	int codepage = CP_UTF8;
 
-	// ワイド文字に変換した場合の文字数を得る（末尾の'\0'を含む）
-	int wlen = MultiByteToWideChar(codepage, 0, str, -1, nullptr, 0);
+	// UTF-8でなければShift_JISとみなす
+	auto u8check = IsValidUtf8(str, size);
+	if (u8check.success) {
+		size = u8check.value;
+	}
+	else {
+		codepage = 932;	// 932 = Shift_JIS
+	}
 
-	// バッファを確保し、strをワイド文字に変換して書き込む（末尾のL'\0'を含む）
+	// ワイド文字の文字数を得る（末尾の'\0'を含む）
+	int slen = static_cast<int>(size) + 1; // 末尾の'\0'を含む長さ
+	int wlen = MultiByteToWideChar(codepage, 0, str, slen, nullptr, 0);
+
+	// strをワイド文字に変換する（末尾のL'\0'を含む）
 	auto wbuf = std::vector<WCHAR>(wlen);
-	MultiByteToWideChar(codepage, 0, str, -1, &wbuf[0], wlen);
+	MultiByteToWideChar(codepage, 0, str, slen, wbuf.data(), wlen);
 
 	return wbuf;
 }
@@ -117,115 +132,5 @@ static std::vector<WCHAR> ToWCHAR(const char* str)
 void MyTextOut(HDC hdc, int x, int y, const char* str)
 {
 	auto wbuf = ToWCHAR(str);
-	MyTextOut(hdc, x, y, &wbuf[0]);
-}
-
-// ファイルからすべてのデータを読み込む
-// ファイル名に日本語が含まれてもよい
-std::vector<char> ReadAllBytes(LPCWSTR filePath)
-{
-	auto file = std::ifstream(filePath, std::ios::binary | std::ios::ate);
-	if (file.is_open()) {
-		auto file_size = (size_t)file.tellg();
-		if (file_size > 0) {
-			auto buf = std::vector<char>(file_size);
-			file.seekg(0, std::ios::beg);
-			if (file.read(&buf[0], file_size)) {
-				return buf;
-			}
-		}
-	}
-	return {};
-}
-
-// ファイルからすべてのデータを読み込む
-// ファイル名に日本語（Shift_JISまたはUTF-8）が含まれてもよい
-std::vector<char> ReadAllBytes(const char* filePath)
-{
-	auto wbuf = ToWCHAR(filePath);
-	return ReadAllBytes(&wbuf[0]);
-}
-
-// バイナリデータをなんらかのエンコードされたテキストとみなし、UTF-8に変換する
-// - データ先頭にUTF-16LEのBOMがあれば、BOMを除いたうえでUTF-8に変換する
-// - 最大4096バイトでUTF-8として矛盾がなければUTF-8とみなすが、UTF-8のBOMがあれば削除する
-// - UTF-8とUTF-16LEのどちらでもなければ、Shift_JISとみなしてUTF-8に変換する
-// どの場合でも文字'\r'をすべて削除し、 末尾に'\0'を追加する
-static std::vector<char> ToUtf8(const std::vector<char> data)
-{
-	if (data.empty()) return {};
-
-	size_t size = data.size();
-	std::vector<char> result;
-
-	// UTF-16LE BOM の判定 (0xFF, 0xFE)
-	if (size >= 2 && data[0] == 0xFF && data[1] == 0xFE) {
-		const WCHAR* wbuf = reinterpret_cast<const WCHAR*>(&data[2]);
-		int wlen = ((int)size - 2) / 2;
-		int u8len = WideCharToMultiByte(932, 0, wbuf, wlen, nullptr, 0, nullptr, nullptr);
-		auto u8buf = std::vector<char>((size_t)u8len);
-		WideCharToMultiByte(932, 0, wbuf, wlen, &u8buf[0], u8len, nullptr, nullptr);
-		result.assign(u8buf.begin(), u8buf.end());
-	}
-	// データがUTF-8かどうか判定する（上限4096バイトまで調べる）
-	else if (IsValidUtf8(&data[0], std::min<size_t>(size, 4096))) {
-		// UTF-8 BOM の判定 (0xEF, 0xBB, 0xBF)
-		if (size >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF) {
-			result.assign(data.begin() + 3, data.end());
-		}
-		else {
-			result.assign(data.begin(), data.end());
-		}
-	}
-	// UTF-16LEでもUTF-8でもなければShift_JISとみなす
-	else {
-		// Shift_JISをUtf-16LEに変換する
-		int wlen = MultiByteToWideChar(932, 0, &data[0], (int)size, nullptr, 0);
-		auto wbuf = std::vector<WCHAR>((size_t)wlen);
-		MultiByteToWideChar(932, 0, &data[0], (int)size, &wbuf[0], wlen);
-
-		// UTF-16LEをUTF-8に変換する
-		int u8len = WideCharToMultiByte(932, 0, &wbuf[0], wlen, nullptr, 0, nullptr, nullptr);
-		auto u8buf = std::vector<char>((size_t)u8len);
-		WideCharToMultiByte(932, 0, &wbuf[0], wlen, &u8buf[0], u8len, nullptr, nullptr);
-
-		// 結果をresultに入れる
-		result.assign(u8buf.begin(), u8buf.end());
-	}
-
-	// 文字列から '\r' を削除する
-	result.erase(std::remove(result.begin(), result.end(), '\r'), result.end());
-
-	// 末尾に '\0' を追加する
-	result.push_back('\0');
-
-	return result;
-}
-
-// ファイルから全テキストを読み込みUTF-8のstd::stringとして返す
-// ファイル名に日本語が含まれてもよい
-// 元のファイルデータがUTF-16LEやShift_JISならUTF-8に変換する
-std::string ReadAllText(LPCWSTR wfilePath)
-{
-	auto utf8buf = ToUtf8(ReadAllBytes(wfilePath));
-	return std::string(utf8buf.data());
-
-	// メモ： std::vector<char> vec から std::string str を作る方法
-	// 
-	//	vecの最後に必ず'\0'がある場合は、vec.data() のみ指定する
-	//	最初の'\0'の直前までの文字がstrに入る
-	//		auto str = std::string(vec.data());
-	// 
-	//	終端が'\0'とは限らない場合は、vec.data()とvec.size()を指定する
-	//	すべての文字がstrに入る（途中の'\0'も含む）
-	//		auto str = std::string(vec.data(), vec.size());
-}
-
-// ファイルから全テキストを読み込みUTF-8のstd::stringとして返す
-// ファイル名に日本語（Shift_JISまたはUTF-8）が含まれてもよい
-// 元のファイルデータがUTF-16LEやShift_JISならUTF-8に変換する
-std::string ReadAllText(const char* filePath)
-{
-	auto utf8buf = ToUtf8(ReadAllBytes(filePath));
-	return std::string(utf8buf.data());
+	MyTextOut(hdc, x, y, wbuf.data());
 }

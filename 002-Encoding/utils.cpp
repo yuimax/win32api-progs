@@ -1,8 +1,5 @@
-#define NOMINMAX // Windows.h より前に定義する
 #include <windows.h>
 #include <vector>
-#include <string>
-#include <fstream>
 #include <string.h>	// for strlen()
 
 // ウィンドウにワイド文字のテキストを表示する

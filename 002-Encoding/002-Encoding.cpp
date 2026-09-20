@@ -110,14 +110,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
 		// 各種エンコードのテキストを表示する
-		// ソースファイルの保存形式がUTF-8でもShift_JISでもいいように、文字列を16進表記で書いている
+		// ソースファイルの保存形式がUTF-8でもShift_JISいいように、文字列を16進で書いている
 		MyTextOut(hdc, 10, 10, L"これは WCHAR(UTF-16LE) です");
 		MyTextOut(hdc, 10, 40, "\x82\xB1\x82\xEA\x82\xCD char(Shift_JIS) \x82\xC5\x82\xB7");
 		MyTextOut(hdc, 10, 70, "\xE3\x81\x93\xE3\x82\x8C\xE3\x81\xAF char(UTF-8) \xE3\x81\xA7\xE3\x81\x99");
 
 		// メモ：
-		//	現在はUTF-8文字列を u8"これは char(UTF-8) です" のように書いてもよい
-		//	ただしこのへんの仕様はまだ流動的なので、本プログラムではu8文字列は使わないことにした
+		//	UTF-8文字列を u8"これはUTF-8です" のように書いてもよい
+		//	ただしchar8_t型の扱いがよくわからないので、本プログラムではu8文字列は使わない
 	
 		// 後始末
 		EndPaint(hWnd, &ps);

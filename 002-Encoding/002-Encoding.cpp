@@ -34,7 +34,7 @@ int APIENTRY wWinMain(
 	// ウィンドウを作成する
 	if (!InitInstance(hInstance, nCmdShow))
 	{
-		return 1;	// 失敗なのでEXITコード1を返す
+		return 1;	// 起動失敗、EXITコード1で終了
 	}
 
 	// hInstanceをグローバル変数に保存しておく
@@ -118,7 +118,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// メモ：
 		//	UTF-8文字列を u8"これはUTF-8です" のように書いてもよい
 		//	ただしchar8_t型の扱いがよくわからないので、本プログラムではu8文字列は使わない
-	
+
 		// 後始末
 		EndPaint(hWnd, &ps);
 		break;

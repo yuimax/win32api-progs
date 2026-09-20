@@ -1,8 +1,9 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by 002-Encoding.rc
+// Microsoft Visual C++ で生成されたインクルード ファイル。
+// 002-Encoding.rc で使用
+//
 
-// 新しいオブジェクトの次の既定値
+// Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS

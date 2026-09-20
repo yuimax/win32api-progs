@@ -2,10 +2,10 @@
 
 // ウィンドウにワイド文字のテキストを表示する
 // テキストに改行(\n)を含めることができる
-void MyTextOut(HDC hdc, int x, int y, LPCWSTR str)
+void MyTextOut(HDC hdc, int x, int y, const WCHAR* wstr)
 {
 	RECT rc = { x, y, 0, 0 }; // left, top, right, bottom
-	DrawText(hdc, str, -1, &rc, DT_NOCLIP | DT_NOPREFIX);
+	DrawText(hdc, wstr, -1, &rc, DT_NOCLIP | DT_NOPREFIX);
 
 	// メモ： DrawText() について
 	//	第2引数は表示するテキストで、ワイド文字列を指定する

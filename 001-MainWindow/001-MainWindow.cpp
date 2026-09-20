@@ -34,7 +34,7 @@ int APIENTRY wWinMain(
 	// ウィンドウを作成する
 	if (!InitInstance(hInstance, nCmdShow))
 	{
-		return 1;	// 失敗なのでEXITコード1を返す
+		return 1;	// 起動失敗、EXITコード1で終了
 	}
 
 	// hInstanceをグローバル変数に保存しておく

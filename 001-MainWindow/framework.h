@@ -13,3 +13,5 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
+// リソース ヘッダー
+#include "resource.h"

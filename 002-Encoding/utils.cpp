@@ -110,7 +110,7 @@ static std::vector<WCHAR> ToWCHAR(const char* str)
 		codepage = CP_UTF8;
 	}
 	else {
-		codepage = 932;	// 932 = Shift_JIS
+		codepage = 932;	// Shift_JISのコードページ
 	}
 
 	// ワイド文字の文字数を得る（末尾の'\0'を含む）

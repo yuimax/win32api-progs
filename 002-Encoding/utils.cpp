@@ -101,12 +101,13 @@ static result<size_t> IsValidUtf8(const char* data, size_t size) {
 static std::vector<WCHAR> ToWCHAR(const char* str)
 {
 	size_t size = strlen(str);	// 末尾の'\0'を含まない長さ
-	int codepage = CP_UTF8;
+	int codepage = 0;
 
 	// UTF-8でなければShift_JISとみなす
 	auto u8check = IsValidUtf8(str, size);
 	if (u8check.success) {
 		size = u8check.value;
+		codepage = CP_UTF8;
 	}
 	else {
 		codepage = 932;	// 932 = Shift_JIS
